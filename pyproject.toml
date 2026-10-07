@@ -1,0 +1,7 @@
+[tool.black]
+line-length = 88
+
+[tool.pytest.ini_options]
+# El paquete plasea vive en 03-construccion/logica-negocio (carpetas con guion: no son paquetes).
+pythonpath = ["03-construccion/logica-negocio"]
+testpaths = ["04-pruebas"]

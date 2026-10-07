@@ -1,0 +1,56 @@
+# ===== Variables de entorno y secretos =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+credenciales*.json
+client_secret*.json
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+build/
+dist/
+instance/
+
+# ===== Node (solo si se usa ESLint u otra herramienta) =====
+node_modules/
+
+# ===== Base de datos: respaldos, volcados y archivos locales =====
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+respaldos/
+
+# ===== Archivos generados en ejecucion =====
+*.log
+logs/
+salidas/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# ===== Editor y sistema operativo =====
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store

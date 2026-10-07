@@ -1,0 +1,2 @@
+# Dependencias de PLASEA (Python/Flask, SQLAlchemy, migraciones, herramientas de calidad).
+# [PENDIENTE] Agregar con versiones fijas al iniciar la construccion (seccion 9.4).
