@@ -29,13 +29,16 @@ instance/
 # ===== Node (solo si se usa ESLint u otra herramienta) =====
 node_modules/
 
-# ===== Base de datos: respaldos, volcados y archivos locales =====
-*.sql
+# ===== Base de datos: respaldos y volcados con datos =====
+# Los scripts del esquema (*.sql) SI se versionan; solo se excluyen los volcados.
+respaldos/
 *.dump
+*respaldo*.sql
+*volcado*.sql
+*_dump.sql
 *.sqlite
 *.sqlite3
 *.db
-respaldos/
 
 # ===== Archivos generados en ejecucion =====
 *.log
