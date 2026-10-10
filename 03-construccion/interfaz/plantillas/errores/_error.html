@@ -1,0 +1,10 @@
+{% extends "app.html" if usuario_actual else "publica.html" %}
+{% block titulo %}{{ self.titulo_error() }}{% endblock %}
+{% block contenido %}
+<section class="tarjeta estado-vacio">
+  <p class="h6 texto-secundario mb-1">Código {% block codigo %}{% endblock %}</p>
+  <h1 class="h3">{% block titulo_error %}{% endblock %}</h1>
+  <p>{% block descripcion %}{% endblock %}</p>
+  <a class="btn btn-primary" href="/">Ir al inicio</a>
+</section>
+{% endblock %}

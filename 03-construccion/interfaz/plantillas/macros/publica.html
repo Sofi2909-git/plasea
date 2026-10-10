@@ -1,0 +1,23 @@
+{# Diseño de las pantallas sin sesión: inicio de sesión, recuperación y activación. #}
+{% extends "base.html" %}
+{% from "macros/mensajes.html" import mensajes_flash %}
+{% block cuerpo %}
+<div class="acceso-layout">
+  <aside class="acceso-panel-marca" aria-label="Acerca de PLASEA">
+    <div class="marca">PLASEA</div>
+    <div>
+      <div class="franja" aria-hidden="true"></div>
+      <h1>Detecte a tiempo a los estudiantes en riesgo en cada corte.</h1>
+      <p>Plataforma de Seguimiento Académico de la Facultad de Ingeniería de Sistemas, Universidad Simón Bolívar, sede Cúcuta.</p>
+    </div>
+    <p class="small mb-0">Prototipo académico. Opera únicamente con datos ficticios.</p>
+  </aside>
+  <main id="contenido" class="acceso-panel-formulario" tabindex="-1">
+    <div class="acceso-tarjeta">
+      <div class="acceso-marca-movil">PLASEA</div>
+      {{ mensajes_flash() }}
+      {% block contenido %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% endblock %}

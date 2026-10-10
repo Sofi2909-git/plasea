@@ -1,0 +1,45 @@
+{# Diseño para usuarios con sesión: barra superior con el menú de su rol (RF-02). #}
+{% extends "base.html" %}
+{% from "macros/mensajes.html" import mensajes_flash %}
+{% block cuerpo %}
+<header>
+  <nav class="navbar navbar-expand-lg barra-plasea" aria-label="Navegación principal">
+    <div class="container-xl">
+      <a class="navbar-brand" href="{{ url_for('acceso_cuentas.inicio') }}">
+        PLASEA <span class="marca-subtitulo d-none d-sm-inline">Seguimiento académico</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal"
+              aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir el menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="menu-principal">
+        <ul class="navbar-nav me-auto gap-lg-1 py-2 py-lg-0">
+          {% for opcion in menu %}
+            <li class="nav-item">
+              <a class="nav-link{% if opcion.activa %} active{% endif %}" href="{{ opcion.url }}"
+                 {% if opcion.activa %}aria-current="page"{% endif %}>{{ opcion.etiqueta }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if usuario_actual %}
+          <div class="d-flex align-items-center gap-3 pb-3 pb-lg-0">
+            <div class="usuario-sesion">
+              <span class="fw-semibold">{{ usuario_actual.nombre_completo }}</span>
+              <small>{{ g.sesion.rol.nombre }}</small>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="contenido" class="contenido-principal" tabindex="-1">
+  <div class="container-xl">
+    {{ mensajes_flash() }}
+    {% block contenido %}{% endblock %}
+  </div>
+</main>
+<footer class="pie-plasea">
+  <div class="container-xl">PLASEA · Facultad de Ingeniería de Sistemas · Prototipo académico con datos ficticios</div>
+</footer>
+{% endblock %}
