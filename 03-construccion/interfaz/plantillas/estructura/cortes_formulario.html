@@ -1,0 +1,56 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Cortes de {{ periodo.identificador }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_periodos') }}">Períodos</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) }}">{{ periodo.identificador }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Cortes</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cortes del período {{ periodo.identificador }}</h1>
+    <p>Los pesos suman 100 %. Los cortes van en orden, sin solaparse y dentro del período ({{ periodo.fecha_inicio | fecha }} a {{ periodo.fecha_fin | fecha }}). El límite de corrección es posterior al de carga.</p>
+  </div>
+</div>
+<section class="tarjeta tarjeta-cuerpo">
+  {% if error %}{{ mensaje(error, "error") }}{% endif %}
+  {% if sugeridos %}{{ mensaje("Se proponen las semanas 1-5, 6-10 y 11-16 con pesos de 30 %, 30 % y 40 %. Ajuste lo que necesite y guarde.", "info") }}{% endif %}
+  <form method="post" novalidate data-un-envio>
+    {{ formulario.hidden_tag() }}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-formulario">
+        <caption class="visually-hidden">Datos de los 3 cortes</caption>
+        <thead><tr>
+          <th scope="col">Corte</th><th scope="col">Peso (%)</th><th scope="col">Inicio</th><th scope="col">Fin</th>
+          <th scope="col">Límite de carga</th><th scope="col">Límite de corrección</th>
+        </tr></thead>
+        <tbody>
+          {% for entrada in formulario.cortes %}
+            {% set numero = loop.index %}
+            {% set bloqueado = numero in cerrados %}
+            <tr>
+              <th scope="row">Corte {{ numero }}{% if bloqueado %} <span class="insignia insignia-inactiva">Cerrado</span>{% endif %}</th>
+              {% for nombre in ["peso_porcentaje", "fecha_inicio", "fecha_fin", "limite_carga", "limite_correccion"] %}
+                {% set campo = entrada.form[nombre] %}
+                <td>
+                  {{ campo(class_="form-control" ~ (" is-invalid" if campo.errors else ""),
+                           aria_label=campo.label.text ~ " del corte " ~ numero,
+                           readonly=bloqueado) }}
+                  {% if campo.errors %}<div class="invalid-feedback d-block">{{ campo.errors | join(" ") }}</div>{% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <button type="submit" class="btn btn-primary">Guardar cortes</button>
+      <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) }}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

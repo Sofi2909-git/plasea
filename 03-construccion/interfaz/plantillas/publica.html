@@ -4,7 +4,11 @@
 {% block cuerpo %}
 <div class="acceso-layout">
   <aside class="acceso-panel-marca" aria-label="Acerca de PLASEA">
-    <div class="marca">PLASEA</div>
+    <div class="marca-acceso">
+      <img src="{{ url_for('static', filename='img/unisimon-blanco.png') }}" alt="Universidad Simón Bolívar" width="124" height="80">
+      <span class="marca-separador" aria-hidden="true"></span>
+      <span class="marca">PLASEA</span>
+    </div>
     <div>
       <div class="franja" aria-hidden="true"></div>
       <h1>Detecte a tiempo a los estudiantes en riesgo en cada corte.</h1>
@@ -14,9 +18,15 @@
   </aside>
   <main id="contenido" class="acceso-panel-formulario" tabindex="-1">
     <div class="acceso-tarjeta">
-      <div class="acceso-marca-movil">PLASEA</div>
+      <div class="acceso-marca-movil">
+        <span class="logo-insignia"><img src="{{ url_for('static', filename='img/unisimon-blanco.png') }}" alt="Universidad Simón Bolívar" width="56" height="36"></span>
+        <span>PLASEA</span>
+      </div>
       {{ mensajes_flash() }}
       {% block contenido %}{% endblock %}
+      <p class="acceso-nota text-center">
+        <a href="{{ url_for('ayuda_informacion.politicas') }}">Políticas de tratamiento de datos y de uso</a>
+      </p>
     </div>
   </main>
 </div>

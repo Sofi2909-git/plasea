@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from functools import wraps
 from typing import Any, Callable, Optional, TypeVar
 from urllib.parse import urlsplit
@@ -23,10 +24,67 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 TODOS_LOS_ROLES = (ROL_PROFESOR, ROL_AUDITOR, ROL_ADMINISTRADOR)
 
-# (etiqueta, endpoint, roles que la ven)
-MENU: tuple[tuple[str, str, tuple[str, ...]], ...] = (
-    ("Inicio", "acceso_cuentas.inicio", TODOS_LOS_ROLES),
-    ("Cuentas de usuario", "acceso_cuentas.lista_cuentas", (ROL_ADMINISTRADOR,)),
+
+@dataclass(frozen=True)
+class OpcionMenu:
+    """Opción de la navegación principal.
+
+    ``blueprints`` marca la opción como activa en cualquier pantalla de esos
+    blueprints. ``en_inicio`` la muestra como tarjeta en la página de inicio.
+    """
+
+    etiqueta: str
+    endpoint: str
+    roles: tuple[str, ...]
+    descripcion: str = ""
+    blueprints: tuple[str, ...] = ()
+    en_inicio: bool = True
+
+
+MENU: tuple[OpcionMenu, ...] = (
+    OpcionMenu("Inicio", "acceso_cuentas.inicio", TODOS_LOS_ROLES, en_inicio=False),
+    OpcionMenu(
+        "Cuentas de usuario",
+        "acceso_cuentas.lista_cuentas",
+        (ROL_ADMINISTRADOR,),
+        "Cree cuentas, cambie roles y active, desactive, bloquee o desbloquee accesos.",
+    ),
+    OpcionMenu(
+        "Mis cursos",
+        "registro_asistencia_notas.mis_cursos",
+        (ROL_PROFESOR,),
+        "Sus cursos del período, la asistencia por sesión y las notas de cada "
+        "corte.",
+        blueprints=("registro_asistencia_notas",),
+    ),
+    OpcionMenu(
+        "Estructura académica",
+        "estructura_academica.panel",
+        (ROL_AUDITOR,),
+        "Períodos, cortes, festivos, asignaturas, cursos con horario y umbrales de "
+        "alerta.",
+        blueprints=("estructura_academica",),
+    ),
+    OpcionMenu(
+        "Estudiantes",
+        "estudiantes_inscripciones.lista",
+        (ROL_AUDITOR,),
+        "Registro de estudiantes, historial de estados, inscripciones y carga por "
+        "CSV.",
+        blueprints=("estudiantes_inscripciones",),
+    ),
+    OpcionMenu(
+        "Acerca de PLASEA",
+        "ayuda_informacion.acerca",
+        TODOS_LOS_ROLES,
+        en_inicio=False,
+    ),
+    OpcionMenu(
+        "Políticas",
+        "ayuda_informacion.politicas",
+        TODOS_LOS_ROLES,
+        en_inicio=False,
+    ),
 )
 
 
@@ -116,19 +174,24 @@ def rol_requerido(*roles: str) -> Callable[[F], F]:
 def opciones_menu() -> list[dict[str, Any]]:
     """Devuelve las opciones del menú permitidas para el rol de la sesión (RF-02)."""
     # Responsable: Islender Arturo Alfonso
-    # RF-02
+    # RF-02 (opciones de E2, E3 y E12: Yeferson Fabián Jaimes, RF-13 a RF-23,
+    # RF-62 y RF-63)
     rol = g.get("rol_codigo")
     if rol is None:
         return []
+    endpoint_actual = request.endpoint or ""
     return [
         {
-            "etiqueta": etiqueta,
-            "url": url_for(endpoint),
-            "activa": request.endpoint == endpoint
-            or (request.endpoint or "").startswith(endpoint + "_"),
+            "etiqueta": opcion.etiqueta,
+            "url": url_for(opcion.endpoint),
+            "descripcion": opcion.descripcion,
+            "en_inicio": opcion.en_inicio,
+            "activa": endpoint_actual == opcion.endpoint
+            or endpoint_actual.startswith(opcion.endpoint + "_")
+            or request.blueprint in opcion.blueprints,
         }
-        for etiqueta, endpoint, roles in MENU
-        if rol in roles
+        for opcion in MENU
+        if rol in opcion.roles
     ]
 
 

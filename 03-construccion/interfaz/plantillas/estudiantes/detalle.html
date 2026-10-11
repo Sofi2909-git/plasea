@@ -1,0 +1,86 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% block titulo %}{{ estudiante.nombres }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estudiantes_inscripciones.lista') }}">Estudiantes</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ estudiante.codigo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ estudiante.nombres }}</h1>
+    <p>Código {{ estudiante.codigo }} · {{ estudiante.correo }} · {{ estudiante.programa_academico.nombre }} · cohorte {{ estudiante.periodo_ingreso }}</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_editar', estudiante_id=estudiante.id) }}">Editar datos</a>
+</div>
+
+<div class="rejilla-detalle">
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-estado">
+    <h2 id="titulo-estado" class="titulo-seccion">Estado</h2>
+    {% set codigo_estado = vigente.estado_estudiante.codigo if vigente else None %}
+    {% set nombre_estado = vigente.estado_estudiante.nombre if vigente else None %}
+    <p class="mb-3">Vigente hoy: {% include "estudiantes/_insignia_estado.html" %}
+      {% if vigente %}<span class="texto-secundario">desde el {{ vigente.fecha_efectiva | fecha }}</span>{% endif %}</p>
+    <form method="post" action="{{ url_for('estudiantes_inscripciones.lista_estado_nuevo', estudiante_id=estudiante.id) }}" novalidate data-un-envio>
+      {{ formulario_estado.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-sm-6">{{ campo(formulario_estado.estado) }}</div>
+        <div class="col-sm-6">{{ campo(formulario_estado.fecha_efectiva) }}</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Registrar estado</button>
+    </form>
+    <p class="texto-secundario small mt-3 mb-0">Un estudiante graduado, retirado formal o cancelado no se puede inscribir en períodos posteriores a la fecha efectiva.</p>
+  </section>
+  <section class="tarjeta" aria-labelledby="titulo-historial-estados">
+    <div class="tarjeta-cuerpo pb-0"><h2 id="titulo-historial-estados" class="titulo-seccion">Historial de estados</h2></div>
+    {% if historial %}
+      <div class="contenedor-tabla contenedor-tabla-bajo">
+        <table class="table tabla-plasea">
+          <caption class="visually-hidden">Historial de estados del estudiante</caption>
+          <thead><tr><th scope="col">Fecha efectiva</th><th scope="col">Estado</th><th scope="col">Registró</th><th scope="col">Registrado el</th></tr></thead>
+          <tbody>
+            {% for registro in historial %}
+              {% set codigo_estado = registro.estado_estudiante.codigo %}{% set nombre_estado = registro.estado_estudiante.nombre %}
+              <tr><td>{{ registro.fecha_efectiva | fecha }}</td><td>{% include "estudiantes/_insignia_estado.html" %}</td>
+                  <td>{{ registro.registrado_por.nombre_completo }}</td><td class="text-nowrap">{{ registro.creado_en | fecha_hora }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="estado-vacio"><h2>Sin estados</h2><p>Registre el estado del estudiante.</p></div>
+    {% endif %}
+  </section>
+</div>
+
+<section class="tarjeta mt-4" aria-labelledby="titulo-inscripciones">
+  <div class="tarjeta-cuerpo pb-0">
+    <h2 id="titulo-inscripciones" class="titulo-seccion">Inscripciones</h2>
+    <p class="texto-secundario">Para inscribir al estudiante, abra el curso en <a href="{{ url_for('estructura_academica.panel_cursos') }}">Cursos y horarios</a>.</p>
+  </div>
+  {% if inscripciones %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea">
+        <caption class="visually-hidden">Inscripciones del estudiante</caption>
+        <thead><tr><th scope="col">Período</th><th scope="col">Asignatura</th><th scope="col">Curso</th><th scope="col" class="text-end">Semestre</th><th scope="col">Situación</th></tr></thead>
+        <tbody>
+          {% for inscripcion in inscripciones %}
+            <tr>
+              <td>{{ inscripcion.curso.periodo_academico.identificador }}</td>
+              <td>{{ inscripcion.curso.asignatura.codigo }} · {{ inscripcion.curso.asignatura.nombre }}</td>
+              <td><a href="{{ url_for('estructura_academica.panel_curso', curso_id=inscripcion.curso_id) }}">{{ inscripcion.curso.codigo }}</a></td>
+              <td class="text-end">{{ inscripcion.matricula_periodo.semestre_cursado }}</td>
+              <td>{% if inscripcion.retirada_en %}<span class="insignia insignia-inactiva">Retirado el {{ inscripcion.retirada_en | fecha }}</span>
+                  {% else %}<span class="insignia insignia-activa">Inscrito</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio"><h2>Sin inscripciones</h2><p>El estudiante aún no está inscrito en ningún curso.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

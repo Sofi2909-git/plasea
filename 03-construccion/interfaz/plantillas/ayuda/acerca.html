@@ -1,0 +1,39 @@
+{% extends "app.html" %}
+{% block titulo %}Acerca de PLASEA{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Acerca de PLASEA</h1>
+    <p>Plataforma de Seguimiento Académico · Facultad de Ingeniería de Sistemas, Universidad Simón Bolívar, sede Cúcuta.</p>
+  </div>
+</div>
+<div class="contenido-lectura">
+  <section class="tarjeta tarjeta-cuerpo mb-4">
+    <h2 class="titulo-seccion">Para qué sirve</h2>
+    <p>PLASEA ayuda a detectar a tiempo, durante cada corte, a los estudiantes que están perdiendo o en riesgo de perder una asignatura, y a medir su continuidad entre semestres.</p>
+    <p class="mb-0">Una asignatura se pierde con nota final menor que 3,0 (escala de 1,0 a 5,0) o con una inasistencia mayor que el 30 % de las horas del período. Los umbrales vigentes los define el Auditor académico.</p>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo mb-4">
+    <h2 class="titulo-seccion">Quién la usa</h2>
+    <dl class="lista-definiciones">
+      <dt>Profesor</dt><dd>Consulta sus cursos y estudiantes, registra la asistencia por sesión y la nota de cada corte, y envía el registro del curso.</dd>
+      <dt>Auditor académico</dt><dd>Bienestar Universitario y la Dirección de Facultad. Gestiona la estructura académica y los estudiantes, cierra cortes, autoriza reaperturas y consulta alertas, resultados y continuidad.</dd>
+      <dt>Administrador del sistema</dt><dd>Área de Sistemas. Gestiona las cuentas de usuario y los datos de prueba.</dd>
+    </dl>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo mb-4">
+    <h2 class="titulo-seccion">Alcance</h2>
+    <ul>
+      <li>Muestra métricas y alertas (verde, amarilla y roja) por estudiante, asignatura y corte. Lo que se haga con esa información le corresponde a Bienestar y a los encargados de permanencia.</li>
+      <li>No hace seguimiento de casos, intervenciones ni tutorías.</li>
+      <li>Envía correo solo para restablecer contraseñas, activar cuentas y avisar al Auditor académico del cierre de un corte con alertas nuevas.</li>
+      <li>Exporta solo a CSV y ofrece una vista imprimible para guardar como PDF desde el navegador.</li>
+      <li>No se integra con los sistemas ni con la autenticación de la universidad.</li>
+    </ul>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo">
+    <h2 class="titulo-seccion">Prototipo académico</h2>
+    <p class="mb-0">PLASEA es un prototipo de la asignatura Gestión de Proyectos para demostrar su factibilidad. Opera únicamente con datos ficticios. Consulte también las <a href="{{ url_for('ayuda_informacion.politicas') }}">políticas de tratamiento de datos y de uso</a>.</p>
+  </section>
+</div>
+{% endblock %}

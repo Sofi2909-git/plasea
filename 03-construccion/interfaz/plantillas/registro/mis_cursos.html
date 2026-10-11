@@ -1,0 +1,72 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Mis cursos{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Mis cursos</h1>
+    {% if periodo %}
+      <p>Período {{ periodo.identificador }} · {{ periodo.fecha_inicio | fecha }} a {{ periodo.fecha_fin | fecha }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if not periodo %}
+  <section class="tarjeta estado-vacio">
+    <h2>No hay un período en curso</h2>
+    <p>Cuando el Auditor académico marque el período en curso, aquí verá sus cursos.</p>
+  </section>
+{% elif not resumenes %}
+  <section class="tarjeta estado-vacio">
+    <h2>No tiene cursos asignados en {{ periodo.identificador }}</h2>
+    <p>Si dicta un curso en este período, pida al Auditor académico que se lo asigne.</p>
+  </section>
+{% else %}
+  <div class="lista-cursos">
+    {% for r in resumenes %}
+      {% set curso = r.curso %}
+      <article class="tarjeta curso-profesor" aria-labelledby="curso-{{ curso.id }}">
+        <div class="curso-profesor-datos">
+          <h2 id="curso-{{ curso.id }}" class="curso-profesor-titulo">
+            <a href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">{{ curso.asignatura.nombre }}</a>
+          </h2>
+          <p class="curso-profesor-codigo">{{ curso.asignatura.codigo }} · {{ curso.codigo }}</p>
+          <ul class="curso-profesor-horario" aria-label="Horario">
+            {% for bloque in curso.bloques_horario %}
+              <li>{{ dias[bloque.dia_semana] }} {{ bloque.hora_inicio | hora }}–{{ bloque.hora_fin | hora }}</li>
+            {% else %}
+              <li>Sin horario definido</li>
+            {% endfor %}
+          </ul>
+          <p class="texto-secundario mb-0">{{ r.inscritos }} estudiante(s) · {{ r.horas_totales }} h en el período</p>
+        </div>
+
+        {% set estados = r.estados %}{% set corte_en_carga = r.corte_en_carga %}
+        {% include "registro/_linea_cortes.html" %}
+
+        <div class="curso-profesor-pendientes">
+          {% if r.corte_en_carga %}
+            <p class="pendiente-titulo">Para el corte {{ r.corte_en_carga.numero }}</p>
+            <ul class="lista-pendientes">
+              <li class="{{ 'pendiente-ok' if r.sesiones_por_registrar == 0 else 'pendiente-falta' }}">
+                {% if r.sesiones_por_registrar %}{{ r.sesiones_por_registrar }} sesión(es) sin asistencia{% else %}Asistencia al día{% endif %}
+              </li>
+              <li class="{{ 'pendiente-ok' if r.notas_faltantes == 0 else 'pendiente-falta' }}">
+                {% if r.notas_faltantes %}{{ r.notas_faltantes }} nota(s) por registrar{% else %}Notas completas{% endif %}
+              </li>
+            </ul>
+          {% else %}
+            <p class="texto-secundario">Ningún corte tiene el plazo de carga abierto.</p>
+          {% endif %}
+          <div class="acciones-curso">
+            <a class="btn btn-primary btn-sm" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">Abrir curso</a>
+            {% if r.corte_en_carga %}
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('registro_asistencia_notas.notas', curso_id=curso.id, numero=r.corte_en_carga.numero) }}">Notas del corte {{ r.corte_en_carga.numero }}</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

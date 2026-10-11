@@ -1,0 +1,4 @@
+{# Insignia del estado del estudiante (texto + color). Requiere `codigo_estado` y `nombre_estado`. #}
+{% set clase = {"activo": "insignia-activa", "graduado": "insignia-info", "aplazo_semestre": "insignia-aviso",
+                "retirado_formal": "insignia-inactiva", "cancelado": "insignia-bloqueada"}.get(codigo_estado, "insignia-inactiva") %}
+<span class="insignia {{ clase }}">{{ nombre_estado or "Sin estado" }}</span>

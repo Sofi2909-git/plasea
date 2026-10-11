@@ -1,0 +1,84 @@
+{% extends "app.html" %}
+{% block titulo %}{{ curso.asignatura.codigo }} {{ curso.codigo }}{% endblock %}
+{% block contenido %}
+{% set miga = None %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ curso.asignatura.nombre }} · {{ curso.codigo }}</h1>
+    <p>{{ curso.asignatura.codigo }} · período {{ curso.periodo_academico.identificador }} ·
+      {% for bloque in curso.bloques_horario %}{{ dias[bloque.dia_semana] }} {{ bloque.hora_inicio | hora }}–{{ bloque.hora_fin | hora }}{% if not loop.last %}, {% endif %}{% else %}sin horario{% endfor %}</p>
+  </div>
+</div>
+
+<section class="tarjeta tarjeta-cuerpo mb-4" aria-labelledby="titulo-cortes">
+  <h2 id="titulo-cortes" class="titulo-seccion">Cortes y notas</h2>
+  {% include "registro/_linea_cortes.html" %}
+  <div class="acciones-cortes">
+    {% for item in estados %}
+      {% set en_carga = corte_en_carga and corte_en_carga.id == item.corte.id %}
+      <a class="btn btn-sm {{ 'btn-primary' if en_carga else 'btn-outline-primary' }}"
+         href="{{ url_for('registro_asistencia_notas.notas', curso_id=curso.id, numero=item.corte.numero) }}">
+        {{ "Registrar notas" if en_carga else "Ver notas" }} del corte {{ item.corte.numero }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="rejilla-curso">
+  <section class="tarjeta" aria-labelledby="titulo-sesiones" id="sesiones">
+    <div class="tarjeta-cuerpo pb-2">
+      <h2 id="titulo-sesiones" class="titulo-seccion">Asistencia por sesión</h2>
+      <p class="texto-secundario mb-0">Marque solo a los ausentes; los demás quedan presentes. Se registran las sesiones ya dictadas dentro del plazo de su corte.</p>
+    </div>
+    {% if sesiones %}
+      {% for item, filas in grupos if filas %}
+        {% set por_registrar = filas | selectattr("dictada") | rejectattr("bloqueo") | rejectattr("registrada") | list | length %}
+        {% set abierto = (corte_en_carga and corte_en_carga.id == item.corte.id) or por_registrar %}
+        <details class="grupo-sesiones" {% if abierto %}open{% endif %}>
+          <summary>
+            Corte {{ item.corte.numero }}
+            <span class="insignia insignia-corte-{{ item.estado }}">{{ item.nombre }}</span>
+            <span class="resumen-grupo">{{ filas | length }} sesiones{% if por_registrar %} · {{ por_registrar }} por registrar{% endif %}</span>
+          </summary>
+          {% set filas_grupo = filas %}{% include "registro/_tabla_sesiones.html" %}
+        </details>
+      {% endfor %}
+      {% if fuera_de_corte %}
+        <details class="grupo-sesiones">
+          <summary>Fuera de los cortes <span class="resumen-grupo">{{ fuera_de_corte | length }} sesiones</span></summary>
+          {% set filas_grupo = fuera_de_corte %}{% include "registro/_tabla_sesiones.html" %}
+        </details>
+      {% endif %}
+    {% else %}
+      <div class="estado-vacio">
+        <h2>El curso aún no tiene calendario</h2>
+        <p>El Auditor académico genera las sesiones a partir del horario y los festivos.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="tarjeta" aria-labelledby="titulo-estudiantes" id="estudiantes">
+    <div class="tarjeta-cuerpo pb-2">
+      <h2 id="titulo-estudiantes" class="titulo-seccion">Estudiantes inscritos</h2>
+      <p class="texto-secundario mb-0">{{ estudiantes | length }} estudiante(s) con inscripción vigente.</p>
+    </div>
+    {% if estudiantes %}
+      <div class="contenedor-tabla">
+        <table class="table tabla-plasea tabla-compacta">
+          <caption class="visually-hidden">Estudiantes inscritos en el curso</caption>
+          <thead><tr><th scope="col">Código</th><th scope="col">Nombre</th></tr></thead>
+          <tbody>
+            {% for e in estudiantes %}
+              <tr><td class="cifra-tabular">{{ e.codigo }}</td><td>{{ e.nombres }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="estado-vacio">
+        <h2>Aún no hay estudiantes inscritos</h2>
+        <p>El Auditor académico inscribe a los estudiantes en el curso.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

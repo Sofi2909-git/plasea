@@ -1,0 +1,120 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Cargar estudiantes desde CSV{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estudiantes_inscripciones.lista') }}">Estudiantes</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Cargar CSV</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cargar estudiantes e inscripciones</h1>
+    <p>Primero se valida el archivo completo. No se guarda nada hasta que confirme.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.importar_plantilla') }}" download>Descargar plantilla</a>
+</div>
+
+<ol class="pasos-carga" aria-label="Pasos de la carga">
+  <li class="{{ 'hecho' if resumen else 'actual' }}" {% if not resumen %}aria-current="step"{% endif %}>Validar archivo</li>
+  <li class="{{ 'actual' if resumen }}" {% if resumen %}aria-current="step"{% endif %}>Revisar y confirmar</li>
+</ol>
+
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+
+{% if not resumen %}
+<div class="rejilla-detalle">
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-archivo">
+    <h2 id="titulo-archivo" class="titulo-seccion">Archivo</h2>
+    <form method="post" enctype="multipart/form-data" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      {{ campo(formulario.archivo, ayuda="Hasta " ~ tamano_maximo_mb ~ " MB. Separador punto y coma o coma; UTF-8 o el CSV de Excel.") }}
+      {{ formulario.validar(class_="btn btn-primary") }}
+    </form>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-columnas">
+    <h2 id="titulo-columnas" class="titulo-seccion">Columnas</h2>
+    <dl class="lista-definiciones mb-0">
+      <dt>codigo, nombres, correo, periodo_ingreso</dt>
+      <dd>Datos del estudiante. Si el código ya existe, se actualizan nombres, correo y cohorte.</dd>
+      <dt>periodo, asignatura, curso, semestre_cursado</dt>
+      <dd>Opcionales: complete las cuatro para inscribirlo (ej.: 2026-2, ISI501, T01, 5). Un estudiante con varias asignaturas ocupa una fila por curso.</dd>
+    </dl>
+  </section>
+</div>
+{% else %}
+<section class="tarjeta tarjeta-cuerpo mb-4" aria-labelledby="titulo-resumen">
+  <h2 id="titulo-resumen" class="titulo-seccion">Resumen de {{ nombre_archivo }}</h2>
+  <div class="rejilla-cifras">
+    <div><span class="dato-grande">{{ resumen.nuevos }}</span><span class="texto-secundario">estudiantes nuevos</span></div>
+    <div><span class="dato-grande">{{ resumen.actualizados }}</span><span class="texto-secundario">actualizados</span></div>
+    <div><span class="dato-grande">{{ resumen.sin_cambios }}</span><span class="texto-secundario">sin cambios</span></div>
+    <div><span class="dato-grande">{{ resumen.inscripciones }}</span><span class="texto-secundario">inscripciones nuevas</span></div>
+    <div class="{{ 'cifra-error' if resumen.con_error }}"><span class="dato-grande">{{ resumen.con_error | length }}</span><span class="texto-secundario">filas con error</span></div>
+  </div>
+  {% if resumen.con_error and resumen.validas %}
+    {{ mensaje("Las filas con error no se guardarán. Corríjalas en el archivo y cárguelas de nuevo, o confirme solo las válidas.", "aviso") }}
+  {% elif not resumen.validas %}
+    {{ mensaje("Ninguna fila es válida. Corrija el archivo y vuelva a validarlo.", "error") }}
+  {% endif %}
+  <div class="acciones-formulario px-0 pb-0">
+    {% if resumen.validas %}
+      <form method="post" action="{{ url_for('estudiantes_inscripciones.importar_confirmar') }}" class="m-0" data-un-envio>
+        {{ confirmacion.hidden_tag() }}
+        <button type="submit" class="btn btn-primary">Guardar {{ resumen.validas }} fila(s) válida(s)</button>
+      </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('estudiantes_inscripciones.importar_cancelar') }}" class="m-0">
+      {{ confirmacion.hidden_tag() }}
+      <button type="submit" class="btn btn-outline-primary">Cancelar carga</button>
+    </form>
+  </div>
+</section>
+
+{% if resumen.con_error %}
+<section class="tarjeta mb-4" aria-labelledby="titulo-errores">
+  <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-errores" class="titulo-seccion mb-0">Filas con error</h2></div>
+  <div class="contenedor-tabla contenedor-tabla-bajo">
+    <table class="table tabla-plasea">
+      <caption class="visually-hidden">Filas del archivo con error y su motivo</caption>
+      <thead><tr><th scope="col">Fila</th><th scope="col">Código</th><th scope="col">Motivo</th></tr></thead>
+      <tbody>
+        {% for fila in resumen.con_error %}
+          <tr><td class="cifra-tabular">{{ fila.numero }}</td><td class="cifra-tabular">{{ fila.codigo or "(vacío)" }}</td><td>{{ fila.errores | join(" ") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<section class="tarjeta" aria-labelledby="titulo-validas">
+  <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-validas" class="titulo-seccion mb-0">Filas válidas</h2></div>
+  {% set validas = resumen.filas | selectattr("valida") | list %}
+  {% if validas %}
+    <div class="contenedor-tabla contenedor-tabla-bajo">
+      <table class="table tabla-plasea">
+        <caption class="visually-hidden">Filas válidas y lo que se hará con cada una</caption>
+        <thead><tr><th scope="col">Fila</th><th scope="col">Código</th><th scope="col">Nombres</th><th scope="col">Estudiante</th><th scope="col">Inscripción</th></tr></thead>
+        <tbody>
+          {% set acciones = {"nuevo": "Nuevo", "actualizado": "Se actualiza", "sin_cambios": "Sin cambios", "repetido": "Ya en el archivo"} %}
+          {% for fila in validas %}
+            <tr>
+              <td class="cifra-tabular">{{ fila.numero }}</td>
+              <td class="cifra-tabular">{{ fila.codigo }}</td>
+              <td>{{ fila.nombres }}</td>
+              <td><span class="insignia {{ 'insignia-info' if fila.accion_estudiante == 'nuevo' else 'insignia-aviso' if fila.accion_estudiante == 'actualizado' else 'insignia-inactiva' }}">{{ acciones[fila.accion_estudiante] }}</span></td>
+              <td>{{ fila.inscripcion or "Sin inscripción" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio"><h2>No hay filas válidas</h2></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

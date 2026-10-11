@@ -1,0 +1,65 @@
+{% extends "app.html" %}
+{% block titulo %}Períodos académicos{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Períodos académicos</h1>
+    <p>Cada período dura 16 semanas. Solo uno puede estar en curso; los anteriores se conservan.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('estructura_academica.panel_periodo_nuevo') }}">Nuevo período</a>
+</div>
+{% include "estructura/_navegacion.html" %}
+<section class="tarjeta">
+  {% if periodos %}
+    <div class="contenedor-tabla">
+      <table class="table table-hover tabla-plasea">
+        <caption class="visually-hidden">Períodos académicos</caption>
+        <thead>
+          <tr>
+            <th scope="col">Período</th>
+            <th scope="col">Inicio</th>
+            <th scope="col">Fin</th>
+            <th scope="col">Cortes</th>
+            <th scope="col">Festivos</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for periodo in periodos %}
+            <tr>
+              <td class="fw-semibold"><a href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) }}">{{ periodo.identificador }}</a></td>
+              <td>{{ periodo.fecha_inicio | fecha }}</td>
+              <td>{{ periodo.fecha_fin | fecha }}</td>
+              <td>{{ periodo.cortes | length }} / 3</td>
+              <td>{{ periodo.festivos | length }}</td>
+              <td>
+                {% if periodo.en_curso_marca %}<span class="insignia insignia-activa">En curso</span>
+                {% else %}<span class="insignia insignia-inactiva">No en curso</span>{% endif %}
+              </td>
+              <td>
+                <div class="celda-acciones">
+                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) }}">Ver</a>
+                  {% if not periodo.en_curso_marca %}
+                    <form method="post" class="m-0" action="{{ url_for('estructura_academica.panel_periodo_en_curso', periodo_id=periodo.id) }}"
+                          data-confirmar="¿Marcar {{ periodo.identificador }} como período en curso? El período en curso actual dejará de estarlo.">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Marcar en curso</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>Aún no hay períodos</h2>
+      <p>Registre el primer período para poder definir cortes, festivos y cursos.</p>
+      <a class="btn btn-primary" href="{{ url_for('estructura_academica.panel_periodo_nuevo') }}">Nuevo período</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{# Navegación interna de la estructura académica (E2). #}
+{% set secciones = [
+  ("estructura_academica.panel", "Resumen", ()),
+  ("estructura_academica.panel_periodos", "Períodos y cortes", ("estructura_academica.panel_periodo",)),
+  ("estructura_academica.panel_asignaturas", "Asignaturas", ("estructura_academica.panel_asignatura",)),
+  ("estructura_academica.panel_cursos", "Cursos y horarios", ("estructura_academica.panel_curso",)),
+  ("estructura_academica.panel_umbrales", "Umbrales de alerta", ()),
+] %}
+<nav class="subnavegacion" aria-label="Secciones de la estructura académica">
+  <ul>
+    {% for endpoint, etiqueta, prefijos in secciones %}
+      {% set activa = request.endpoint == endpoint or (prefijos and request.endpoint.startswith(prefijos[0])) %}
+      <li><a href="{{ url_for(endpoint) }}" {% if activa %}class="activa" aria-current="page"{% endif %}>{{ etiqueta }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>

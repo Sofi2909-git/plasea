@@ -3,17 +3,20 @@
 {% from "macros/mensajes.html" import mensajes_flash %}
 {% block cuerpo %}
 <header>
-  <nav class="navbar navbar-expand-lg barra-plasea" aria-label="Navegación principal">
+  <nav class="navbar navbar-expand-xl barra-plasea" aria-label="Navegación principal">
     <div class="container-xl">
-      <a class="navbar-brand" href="{{ url_for('acceso_cuentas.inicio') }}">
-        PLASEA <span class="marca-subtitulo d-none d-sm-inline">Seguimiento académico</span>
+      <a class="navbar-brand marca-plasea" href="{{ url_for('acceso_cuentas.inicio') }}">
+        <img class="marca-logo" src="{{ url_for('static', filename='img/unisimon-blanco.png') }}"
+             alt="Universidad Simón Bolívar" width="62" height="40">
+        <span class="marca-separador" aria-hidden="true"></span>
+        <span class="marca-texto">PLASEA <span class="marca-subtitulo d-none d-xxl-inline">Seguimiento académico</span></span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal"
               aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir el menú">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="menu-principal">
-        <ul class="navbar-nav me-auto gap-lg-1 py-2 py-lg-0">
+        <ul class="navbar-nav me-auto gap-xl-1 py-2 py-xl-0">
           {% for opcion in menu %}
             <li class="nav-item">
               <a class="nav-link{% if opcion.activa %} active{% endif %}" href="{{ opcion.url }}"
@@ -22,9 +25,9 @@
           {% endfor %}
         </ul>
         {% if usuario_actual %}
-          <div class="d-flex align-items-center gap-3 pb-3 pb-lg-0">
+          <div class="d-flex align-items-center gap-3 pb-3 pb-xl-0">
             <div class="usuario-sesion">
-              <span class="fw-semibold">{{ usuario_actual.nombre_completo }}</span>
+              <span class="fw-semibold" title="{{ usuario_actual.nombre_completo }}">{{ usuario_actual.nombre_completo }}</span>
               <small>{{ g.sesion.rol.nombre }}</small>
             </div>
             <form method="post" action="{{ url_for('acceso_cuentas.cerrar_sesion') }}" class="m-0">

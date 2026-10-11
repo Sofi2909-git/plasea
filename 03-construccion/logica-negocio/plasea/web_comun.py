@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from decimal import Decimal
 from typing import Any, Optional
 
 from flask import Flask, Response, g, render_template
@@ -24,6 +25,39 @@ def formato_fecha_hora(valor: Optional[dt.datetime]) -> str:
     # Responsable: Sofi Celmar Galvis (base común)
     # RNF-02
     return valor.strftime("%d/%m/%Y %H:%M") if valor else ""
+
+
+def formato_fecha(valor: Optional[dt.date]) -> str:
+    """Formatea una fecha como dd/mm/aaaa (formato colombiano)."""
+    # Responsable: Yeferson Fabián Jaimes
+    # RF-16 / RF-18
+    return valor.strftime("%d/%m/%Y") if valor else ""
+
+
+def formato_hora(valor: Optional[dt.time]) -> str:
+    """Formatea una hora como hh:mm (24 horas)."""
+    # Responsable: Yeferson Fabián Jaimes
+    # RF-15
+    return valor.strftime("%H:%M") if valor else ""
+
+
+def formato_decimal(valor: Optional[Decimal | float | int], decimales: int = 1) -> str:
+    """Formatea un número con coma decimal (3,0; 30,00)."""
+    # Responsable: Yeferson Fabián Jaimes
+    # RF-17 / RF-20
+    if valor is None:
+        return ""
+    return f"{Decimal(str(valor)):.{decimales}f}".replace(".", ",")
+
+
+def formato_porcentaje(valor: Optional[Decimal | float | int]) -> str:
+    """Porcentaje con coma y sin ceros sobrantes (30; 30,5; 20,25)."""
+    # Responsable: Yeferson Fabián Jaimes
+    # RF-17 / RF-20
+    if valor is None:
+        return ""
+    texto = f"{Decimal(str(valor)):.2f}".rstrip("0").rstrip(".")
+    return texto.replace(".", ",")
 
 
 def agregar_cabeceras(respuesta: Response) -> Response:
@@ -52,6 +86,10 @@ def registrar(app: Flask) -> None:
     # RF-02 / RNF-01
     app.after_request(agregar_cabeceras)
     app.add_template_filter(formato_fecha_hora, "fecha_hora")
+    app.add_template_filter(formato_fecha, "fecha")
+    app.add_template_filter(formato_hora, "hora")
+    app.add_template_filter(formato_decimal, "decimal")
+    app.add_template_filter(formato_porcentaje, "porcentaje")
 
     @app.errorhandler(403)
     def acceso_denegado(_error: Any) -> tuple[str, int]:

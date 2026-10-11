@@ -1,0 +1,58 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Asistencia {{ sesion.fecha | fecha }}{% endblock %}
+{% block contenido %}
+{% set miga = "Asistencia" %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Asistencia del {{ sesion.fecha | fecha }}</h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · {{ sesion.hora_inicio | hora }}–{{ sesion.hora_fin | hora }} ({{ sesion.duracion_horas }} h){% if corte %} · corte {{ corte.numero }}{% endif %}</p>
+  </div>
+</div>
+
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+{% if bloqueo %}{{ mensaje(bloqueo, "info") }}{% endif %}
+
+<section class="tarjeta" aria-labelledby="titulo-lista">
+  <form method="post" novalidate data-un-envio data-asistencia data-horas="{{ sesion.duracion_horas }}">
+    {{ formulario.hidden_tag() }}
+    <div class="tarjeta-cuerpo barra-asistencia">
+      <div>
+        <h2 id="titulo-lista" class="titulo-seccion mb-1">{{ "Marque a los ausentes" if not bloqueo else "Ausentes registrados" }}</h2>
+        <p class="texto-secundario mb-0">
+          {% if not bloqueo %}Quien no esté marcado queda presente. Cada ausente suma {{ sesion.duracion_horas }} h de inasistencia.{% else %}Esta sesión ya no admite cambios desde aquí.{% endif %}
+        </p>
+      </div>
+      <p class="contador-ausentes" aria-live="polite" data-contador>
+        <strong data-total>{{ marcados | length }}</strong> ausente(s) · <span data-horas-total>{{ (marcados | length) * sesion.duracion_horas }}</span> h
+      </p>
+    </div>
+    {% if estudiantes %}
+      <ul class="lista-asistencia" aria-labelledby="titulo-lista">
+        {% for e in estudiantes %}
+          {% set ausente = e.inscripcion_id in marcados %}
+          <li>
+            <label class="fila-asistencia{% if ausente %} esta-ausente{% endif %}" for="ausente-{{ e.inscripcion_id }}">
+              <input class="form-check-input" type="checkbox" name="ausentes" value="{{ e.inscripcion_id }}"
+                     id="ausente-{{ e.inscripcion_id }}" {% if ausente %}checked{% endif %} {% if bloqueo %}disabled{% endif %}>
+              <span class="fila-asistencia-nombre">{{ e.nombres }}</span>
+              <span class="fila-asistencia-codigo cifra-tabular">{{ e.codigo }}</span>
+              <span class="fila-asistencia-estado" aria-hidden="true">{{ "Ausente" if ausente else "Presente" }}</span>
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="estado-vacio"><h2>No hay estudiantes inscritos en esta fecha</h2></div>
+    {% endif %}
+    <div class="tarjeta-cuerpo acciones-formulario">
+      {% if not bloqueo and estudiantes %}
+        {{ formulario.guardar(class_="btn btn-primary") }}
+        <button type="button" class="btn btn-outline-primary" data-todos-presentes hidden>Todos presentes</button>
+      {% endif %}
+      <a class="btn btn-link" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}#sesiones">Volver al curso</a>
+    </div>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='js/registro.js') }}" defer></script>
+{% endblock %}

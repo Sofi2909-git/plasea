@@ -8,22 +8,22 @@
   </div>
 </div>
 {% set accesos = [] %}
-{% for opcion in menu if opcion.etiqueta != "Inicio" %}{% set _ = accesos.append(opcion) %}{% endfor %}
+{% for opcion in menu if opcion.en_inicio %}{% set _ = accesos.append(opcion) %}{% endfor %}
 {% if accesos %}
   <section class="accesos" aria-label="Funciones disponibles">
     {% for opcion in accesos %}
       <a class="tarjeta acceso-directo" href="{{ opcion.url }}">
         <h2>{{ opcion.etiqueta }}</h2>
-        {% if opcion.etiqueta == "Cuentas de usuario" %}
-          <p>Cree cuentas, cambie roles y active, desactive, bloquee o desbloquee accesos.</p>
-        {% endif %}
+        {% if opcion.descripcion %}<p>{{ opcion.descripcion }}</p>{% endif %}
       </a>
     {% endfor %}
   </section>
 {% else %}
   <section class="tarjeta estado-vacio">
     <h2>Aún no hay funciones habilitadas para su rol</h2>
-    <p>Las pantallas de su rol se agregarán en las próximas entregas del prototipo.</p>
+    <p>Las pantallas de su rol se agregarán en las próximas entregas del prototipo.
+      Mientras tanto puede consultar <a href="{{ url_for('ayuda_informacion.acerca') }}">qué es PLASEA</a>
+      y sus <a href="{{ url_for('ayuda_informacion.politicas') }}">políticas de datos y de uso</a>.</p>
   </section>
 {% endif %}
 {% endblock %}

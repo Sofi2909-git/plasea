@@ -29,7 +29,16 @@ EVENTOS = (
     "cierre_sesion",
     "intento_fallido",
     "cambio_administrativo",
+    "importacion",
 )
+ESTADOS_ESTUDIANTE = (
+    ("activo", "Activo"),
+    ("graduado", "Graduado"),
+    ("retirado_formal", "Retirado formal"),
+    ("aplazo_semestre", "Aplazó semestre"),
+    ("cancelado", "Cancelado"),
+)
+PROGRAMA = "Ingeniería de Sistemas"
 CONTRASENA_PRUEBA = "Clave123*"
 
 
@@ -44,7 +53,13 @@ def app() -> Iterator[Any]:
     os.environ.setdefault("URL_BASE_DATOS", URL_PRUEBAS)
 
     from plasea import crear_app
-    from plasea.modelos import Rol, TipoEventoBitacora, db
+    from plasea.modelos import (
+        EstadoEstudiante,
+        ProgramaAcademico,
+        Rol,
+        TipoEventoBitacora,
+        db,
+    )
 
     aplicacion = crear_app(
         {
@@ -60,23 +75,54 @@ def app() -> Iterator[Any]:
         db.create_all()
         db.session.add_all(Rol(codigo=c, nombre=n) for c, n in ROLES)
         db.session.add_all(TipoEventoBitacora(codigo=c, descripcion=c) for c in EVENTOS)
+        db.session.add_all(
+            EstadoEstudiante(codigo=c, nombre=n) for c, n in ESTADOS_ESTUDIANTE
+        )
+        db.session.add(ProgramaAcademico(nombre=PROGRAMA))
         db.session.commit()
     yield aplicacion
 
 
 @pytest.fixture(autouse=True)
 def limpiar_datos(request: pytest.FixtureRequest) -> Iterator[None]:
-    """Vacía las tablas de cuentas antes de cada prueba que usa la base de datos."""
+    """Vacía las tablas de datos antes de cada prueba que usa la base de datos.
+
+    Los catálogos (roles, eventos, estados, programa) se conservan. Se deja una
+    configuración de umbrales con los valores por defecto (RF-20).
+    """
     if "app" not in request.fixturenames:
         yield
         return
     aplicacion = request.getfixturevalue("app")
-    from plasea.modelos import Bitacora, SesionUsuario, TokenCuenta, Usuario, db
+    from plasea import modelos as m
 
+    orden_borrado = (
+        m.Bitacora,
+        m.SesionUsuario,
+        m.TokenCuenta,
+        m.Alerta,
+        m.Ausencia,
+        m.NotaCorte,
+        m.RegistroCursoCorte,
+        m.Inscripcion,
+        m.MatriculaPeriodo,
+        m.HistorialEstadoEstudiante,
+        m.Estudiante,
+        m.SesionClase,
+        m.BloqueHorario,
+        m.Curso,
+        m.Festivo,
+        m.Corte,
+        m.PeriodoAcademico,
+        m.Asignatura,
+        m.ConfiguracionAlerta,
+        m.Usuario,
+    )
     with aplicacion.app_context():
-        for modelo in (Bitacora, SesionUsuario, TokenCuenta, Usuario):
-            db.session.execute(delete(modelo))
-        db.session.commit()
+        for modelo in orden_borrado:
+            m.db.session.execute(delete(modelo))
+        m.db.session.add(m.ConfiguracionAlerta())
+        m.db.session.commit()
     yield
 
 

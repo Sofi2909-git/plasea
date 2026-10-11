@@ -1,0 +1,37 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_periodos') }}">Períodos</a></li>
+    {% if periodo %}<li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) }}">{{ periodo.identificador }}</a></li>{% endif %}
+    <li class="breadcrumb-item active" aria-current="page">{{ "Editar" if periodo else "Nuevo período" }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ titulo }}</h1>
+    <p>La fecha de fin debe caer en la semana 16 contada desde la fecha de inicio.</p>
+  </div>
+</div>
+<div class="row"><div class="col-lg-7 col-xl-6">
+  <section class="tarjeta tarjeta-cuerpo">
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    {% if periodo %}{{ mensaje("Si cambia las fechas se regeneran los calendarios de los cursos sin asistencia. Los cortes y festivos deben quedar dentro de las nuevas fechas.", "info") }}{% endif %}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      {{ campo(formulario.identificador, ayuda="Año y semestre: AAAA-1 o AAAA-2.") }}
+      <div class="row g-3">
+        <div class="col-sm-6">{{ campo(formulario.fecha_inicio) }}</div>
+        <div class="col-sm-6">{{ campo(formulario.fecha_fin) }}</div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_periodo', periodo_id=periodo.id) if periodo else url_for('estructura_academica.panel_periodos') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</div></div>
+{% endblock %}
