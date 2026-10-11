@@ -20,7 +20,8 @@
           {% for opcion in menu if not opcion.grupo %}
             <li class="nav-item">
               <a class="nav-link{% if opcion.activa %} active{% endif %}" href="{{ opcion.url }}"
-                 {% if opcion.activa %}aria-current="page"{% endif %}>{{ opcion.etiqueta }}</a>
+                 {% if opcion.activa %}aria-current="page"{% endif %}
+                 {% if opcion.etiqueta_barra != opcion.etiqueta %}title="{{ opcion.etiqueta }}"{% endif %}>{{ opcion.etiqueta_barra }}</a>
             </li>
           {% endfor %}
           {% for grupo, opciones in menu | selectattr("grupo") | groupby("grupo") %}

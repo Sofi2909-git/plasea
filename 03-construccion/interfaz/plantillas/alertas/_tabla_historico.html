@@ -1,0 +1,26 @@
+{# Tabla de un semestre del histórico (RF-47 y RF-60). Requiere: s (SemestreHistorico). #}
+<table class="table tabla-plasea tabla-historico">
+  <caption class="visually-hidden">Asignaturas de {{ s.periodo.identificador }}</caption>
+  <thead>
+    <tr>
+      <th scope="col">Asignatura</th>
+      {% for c in s.cortes %}<th scope="col" class="text-end">C{{ c.numero }} <span class="peso-corte">{{ c.peso_porcentaje | porcentaje }} %</span></th>{% endfor %}
+      <th scope="col" class="text-end">Acumulada</th>
+      <th scope="col" class="text-end">Inasistencia</th>
+      <th scope="col">Resultado</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in s.filas %}
+      <tr>
+        <td><span class="fw-semibold">{{ f.inscripcion.curso.asignatura.codigo }} {{ f.inscripcion.curso.codigo }}</span> <span class="d-block texto-secundario">{{ f.inscripcion.curso.asignatura.nombre }}</span></td>
+        {% for n in f.notas %}<td class="text-end cifra-tabular">{{ n | decimal if n is not none else "" }}</td>{% endfor %}
+        <td class="text-end cifra-tabular fw-semibold">{{ f.acumulada | decimal(2) if f.acumulada is not none else "" }}</td>
+        <td class="text-end cifra-tabular">{{ f.inasistencia | decimal(1) }} %<span class="d-block texto-secundario">{{ f.horas_ausentes }} de {{ f.horas_totales }} h</span></td>
+        <td><span class="resultado resultado-{{ f.resultado }}">{{ f.nombre_resultado }}</span>{% if f.nombre_motivo %}<span class="d-block texto-secundario small">{{ f.nombre_motivo }}</span>{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="{{ s.cortes | length + 4 }}" class="texto-secundario">Sin asignaturas inscritas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

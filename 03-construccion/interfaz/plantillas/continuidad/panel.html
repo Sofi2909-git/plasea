@@ -1,0 +1,129 @@
+{% extends "app.html" %}
+{% block titulo %}Continuidad{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Continuidad y deserción</h1>
+    <p>Quiénes de los inscritos en un período se inscribieron en el siguiente. Graduados y aplazados no cuentan en el índice.</p>
+  </div>
+</div>
+{% if not periodo %}
+  <section class="tarjeta estado-vacio"><h2>Aún no hay dos períodos para comparar</h2><p>La continuidad se mide cuando existe el período siguiente.</p></section>
+{% else %}
+<form method="get" class="tarjeta tarjeta-cuerpo mb-4 barra-filtros" aria-label="Elegir período">
+  <div>
+    <label class="form-label" for="c-periodo">Período evaluado</label>
+    <select class="form-select" id="c-periodo" name="periodo">
+      {% for p in evaluables %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.identificador }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="acciones-filtro"><button type="submit" class="btn btn-primary">Ver</button></div>
+</form>
+
+<section class="tarjeta tarjeta-cuerpo mb-4 indice-continuidad" aria-labelledby="titulo-indice">
+  <div class="indice-principal">
+    <h2 id="titulo-indice" class="titulo-seccion mb-1">No continuidad {{ periodo.identificador }} → {{ siguiente.identificador if siguiente else "" }}</h2>
+    <span class="indice-valor">{{ (total.indice | decimal(1)) ~ " %" if total.indice is not none else "Sin datos" }}</span>
+    <p class="texto-secundario mb-0 cifra-tabular">{{ total.no_continuan }} / ({{ total.inscritos }} − {{ total.graduados }} graduados − {{ total.aplazados }} aplazados)</p>
+  </div>
+  <dl class="rejilla-cifras mb-0">
+    <div><dt class="texto-secundario fw-normal">Inscritos</dt><dd class="dato-grande mb-0">{{ total.inscritos }}</dd></div>
+    <div><dt class="texto-secundario fw-normal">Continúan</dt><dd class="dato-grande mb-0">{{ total.continuan }}</dd></div>
+    <div><dt class="texto-secundario fw-normal">Graduados</dt><dd class="dato-grande mb-0">{{ total.graduados }}</dd></div>
+    <div><dt class="texto-secundario fw-normal">Aplazaron</dt><dd class="dato-grande mb-0">{{ total.aplazados }}</dd></div>
+    <div class="cifra-error"><dt class="texto-secundario fw-normal">No continúan</dt><dd class="dato-grande mb-0">{{ total.no_continuan }}</dd></div>
+  </dl>
+</section>
+
+<div class="rejilla-tres mb-4">
+  <section class="tarjeta" aria-labelledby="titulo-semestre">
+    <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-semestre" class="titulo-seccion mb-0">Por semestre cursado</h2></div>
+    <div class="contenedor-tabla">{% set grupos = por_semestre %}{% set titulo_columna = "Semestre" %}{% include "continuidad/_tabla_grupos.html" %}</div>
+  </section>
+  <section class="tarjeta" aria-labelledby="titulo-cohorte">
+    <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-cohorte" class="titulo-seccion mb-0">Por cohorte de ingreso</h2></div>
+    <div class="contenedor-tabla contenedor-tabla-bajo">{% set grupos = por_cohorte %}{% set titulo_columna = "Cohorte" %}{% include "continuidad/_tabla_grupos.html" %}</div>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-causa">
+    <h2 id="titulo-causa" class="titulo-seccion">Por causa</h2>
+    {% if por_causa %}
+      <ul class="lista-causas">
+        {% for nombre, cantidad in por_causa %}
+          <li><span>{{ nombre }}</span><span class="cifra-tabular fw-semibold">{{ cantidad }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="texto-secundario small mb-0">La causa es opcional; se registra en la lista de abajo.</p>
+    {% else %}
+      <p class="texto-secundario mb-0">Ningún estudiante dejó de continuar.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="tarjeta" aria-labelledby="titulo-lista" id="no-continuaron">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-lista" class="titulo-seccion">Estudiantes que no continuaron</h2>
+    <form method="get" class="barra-filtros" aria-label="Filtrar la lista">
+      <input type="hidden" name="periodo" value="{{ periodo.id }}">
+      <div>
+        <label class="form-label" for="f-programa">Programa</label>
+        <select class="form-select" id="f-programa" name="programa">
+          <option value="">Todos</option>
+          {% for p in programas %}<option value="{{ p }}" {% if filtros.programa == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label" for="f-semestre">Semestre cursado</label>
+        <select class="form-select" id="f-semestre" name="semestre">
+          <option value="">Todos</option>
+          {% for n in range(1, 11) %}<option value="{{ n }}" {% if filtros.semestre == n %}selected{% endif %}>{{ n }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label" for="f-causa">Causa</label>
+        <select class="form-select" id="f-causa" name="causa">
+          <option value="">Todas</option>
+          <option value="sin_causa" {% if filtros.causa == "sin_causa" %}selected{% endif %}>Sin causa</option>
+          {% for c in causas %}<option value="{{ c.codigo }}" {% if filtros.causa == c.codigo %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="acciones-filtro"><button type="submit" class="btn btn-primary">Filtrar</button></div>
+    </form>
+    <p class="texto-secundario mb-0 mt-3">{{ lista | length }} estudiante(s).</p>
+  </div>
+  {% if lista %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-no-continuan">
+        <caption class="visually-hidden">Estudiantes que no continuaron, con programa, semestre y causa</caption>
+        <thead><tr><th scope="col">Estudiante</th><th scope="col">Programa</th><th scope="col" class="text-end">Semestre</th><th scope="col">Cohorte</th><th scope="col">Causa</th></tr></thead>
+        <tbody>
+          {% for f in lista %}
+            {% set historial_f = historial.get(f.matricula_id, []) %}
+            <tr id="matricula-{{ f.matricula_id }}">
+              <td><a class="fw-semibold" href="{{ url_for('alertas_analitica.historico', estudiante_id=f.estudiante_id) }}">{{ f.nombres }}</a><span class="d-block texto-secundario cifra-tabular">{{ f.codigo }}</span></td>
+              <td>{{ f.programa }}</td>
+              <td class="text-end cifra-tabular">{{ f.semestre }}</td>
+              <td class="cifra-tabular">{{ f.cohorte }}</td>
+              <td>
+                <form method="post" action="{{ url_for('continuidad_desercion.registrar_causa', matricula_id=f.matricula_id) }}" class="formulario-causa">
+                  {{ formulario.csrf_token }}
+                  <input type="hidden" name="volver" value="{{ request.full_path }}">
+                  <label class="visually-hidden" for="causa-{{ f.matricula_id }}">Causa de {{ f.nombres }}</label>
+                  <select class="form-select form-select-sm" id="causa-{{ f.matricula_id }}" name="causa">
+                    {% if not f.causa_codigo %}<option value="" selected>Sin causa</option>{% endif %}
+                    {% for c in causas %}<option value="{{ c.codigo }}" {% if f.causa_codigo == c.codigo %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-outline-primary">Guardar</button>
+                </form>
+                {% if historial_f %}<span class="d-block texto-secundario small">{{ historial_f | length }} registro(s); último por {{ historial_f[0][1] }} el {{ historial_f[0][2] | fecha_hora }}</span>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio"><h2>No hay estudiantes con estos filtros</h2></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

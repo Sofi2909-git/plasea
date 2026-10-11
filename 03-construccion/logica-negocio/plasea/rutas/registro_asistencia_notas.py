@@ -2,13 +2,14 @@
 
 Implementa para el Profesor RF-26 a RF-29 (cursos, inscritos, asistencia y notas
 en borrador) y RF-30 a RF-32 (envío, correcciones con motivo y bloqueo fuera de
-plazo). El historial de cambios (RF-33) y el resumen por estudiante (RF-34)
-pertenecen a otros módulos de la misma épica.
+plazo). Para el Auditor académico, el historial de cambios (RF-33). El resumen
+por estudiante (RF-34) pertenece a otro módulo de la misma épica.
 """
 
 from __future__ import annotations
 
-from typing import Any
+import datetime as dt
+from typing import Any, Optional
 
 from flask import (
     Blueprint,
@@ -28,9 +29,15 @@ from plasea.formularios.registro_asistencia_notas import (
     FormularioEnvio,
     FormularioNotas,
 )
-from plasea.servicios import correcciones, cursos, periodos, registro_academico
+from plasea.servicios import (
+    correcciones,
+    cursos,
+    historial_cambios,
+    periodos,
+    registro_academico,
+)
 from plasea.servicios.comunes import ErrorNegocio
-from plasea.servicios.cuentas import ROL_PROFESOR
+from plasea.servicios.cuentas import ROL_AUDITOR, ROL_PROFESOR
 from plasea.servicios.registro_academico import AccesoDenegado, ErrorNotas
 
 blueprint = Blueprint("registro_asistencia_notas", __name__)
@@ -404,4 +411,43 @@ def corregir_asistencia(curso_id: int, sesion_id: int) -> Any:
         originales=registro_academico.ausentes_de_sesion(sesion.id),
         formulario=formulario,
         error=error,
+    )
+
+
+# ---------------------------------------------------------------------------
+# RF-33: historial de cambios de notas y asistencia (Auditor académico)
+# ---------------------------------------------------------------------------
+
+
+def _fecha(nombre: str) -> Optional[dt.date]:
+    """Fecha AAAA-MM-DD de la consulta, o ``None`` si no es válida."""
+    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # RF-33
+    try:
+        return dt.date.fromisoformat(request.args.get(nombre, ""))
+    except ValueError:
+        return None
+
+
+@blueprint.get("/historial")
+@rol_requerido(ROL_AUDITOR)
+def historial() -> Any:
+    """Cambios de notas y asistencia por curso, estudiante y fechas (RF-33)."""
+    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # RF-33
+    filtros = historial_cambios.FiltrosHistorial(
+        curso_id=request.args.get("curso", type=int) or None,
+        estudiante=request.args.get("estudiante", "").strip() or None,
+        desde=_fecha("desde"),
+        hasta=_fecha("hasta"),
+    )
+    pagina = historial_cambios.listar_cambios(
+        filtros, request.args.get("pagina", 1, type=int)
+    )
+    return render_template(
+        "registro/historial.html",
+        pagina=pagina,
+        filtros=filtros,
+        cursos=historial_cambios.cursos_con_cambios(),
+        parametros={k: v for k, v in request.args.items() if k != "pagina" and v},
     )

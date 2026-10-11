@@ -1,0 +1,100 @@
+{% extends "app.html" %}
+{% block titulo %}Resultados por curso{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Resultados por asignatura y curso</h1>
+    <p>Calculados con las alertas del corte: los totales coinciden con la lista de alertas.</p>
+  </div>
+</div>
+{% if not corte %}
+  <section class="tarjeta estado-vacio"><h2>No hay un período en curso con cortes</h2></section>
+{% else %}
+<form method="get" class="tarjeta tarjeta-cuerpo mb-4" aria-label="Filtrar resultados">
+  <div class="barra-filtros filtros-alertas">
+    <div>
+      <label class="form-label" for="r-periodo">Período</label>
+      <select class="form-select" id="r-periodo" name="periodo">
+        {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.identificador }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="r-corte">Corte</label>
+      <select class="form-select" id="r-corte" name="corte">
+        {% for c, n in cortes %}<option value="{{ c.numero }}" {% if c.id == corte.id %}selected{% endif %}>Corte {{ c.numero }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="r-asignatura">Asignatura</label>
+      <select class="form-select" id="r-asignatura" name="asignatura">
+        <option value="">Todas</option>
+        {% for a in asignaturas %}<option value="{{ a.id }}" {% if filtros.asignatura_id == a.id %}selected{% endif %}>{{ a.codigo }} · {{ a.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="r-curso">Curso</label>
+      <select class="form-select" id="r-curso" name="curso">
+        <option value="">Todos</option>
+        {% for c, etiqueta in cursos %}<option value="{{ c.id }}" {% if filtros.curso_id == c.id %}selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="r-profesor">Profesor</label>
+      <select class="form-select" id="r-profesor" name="profesor">
+        <option value="">Todos</option>
+        {% for pid, nombre in profesores %}<option value="{{ pid }}" {% if filtros.profesor_id == pid %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="acciones-filtro">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+      <a class="btn btn-outline-primary" href="{{ url_for('exportacion.resultados_csv', **parametros) }}">Exportar CSV</a>
+    </div>
+  </div>
+</form>
+
+{% macro pct(fila, valor) -%}{% set p = fila.porcentaje(valor) %}{{ (p | decimal(1)) ~ " %" if p is not none else "" }}{%- endmacro %}
+<section class="tarjeta" aria-labelledby="titulo-resultados">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-resultados" class="titulo-seccion mb-0">Corte {{ corte.numero }} de {{ periodo.identificador }}
+      <span class="insignia {{ 'insignia-corte-cerrado' if corte.cerrado_en else 'insignia-info' }} align-middle">{{ "Definitivo" if corte.cerrado_en else "Provisional" }}</span></h2>
+    <p class="texto-secundario mb-0">Aprobado: nota requerida de 1,0 o menos (en el último corte, acumulada final de 3,0 o más) e inasistencia dentro del límite. Perdido: nota requerida mayor que 5,0 (en el último corte, acumulada menor que 3,0) o inasistencia sobre el límite.</p>
+  </div>
+  {% if filas %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-resultados">
+        <caption class="visually-hidden">Resultados por curso</caption>
+        <thead>
+          <tr><th scope="col">Asignatura</th><th scope="col">Curso</th><th scope="col">Profesor</th>
+            <th scope="col" class="text-end">Inscritos</th><th scope="col" class="text-end">Aprobados</th>
+            <th scope="col" class="text-end">En alerta</th><th scope="col" class="text-end">Perdidos</th></tr>
+        </thead>
+        <tbody>
+          {% for f in filas %}
+            <tr>
+              <td><span class="fw-semibold">{{ f.asignatura }}</span> <span class="texto-secundario">{{ f.nombre_asignatura }}</span></td>
+              <td>{{ f.curso }}</td>
+              <td>{{ f.profesor }}</td>
+              <td class="text-end cifra-tabular">{{ f.inscritos }}</td>
+              <td class="text-end cifra-tabular">{{ f.aprobados }}<span class="d-block texto-secundario">{{ pct(f, f.aprobados) }}</span></td>
+              <td class="text-end cifra-tabular"><a href="{{ url_for('alertas_analitica.lista', periodo=periodo.id, corte=corte.numero, curso=f.curso_id) }}">{{ f.en_alerta }}</a><span class="d-block texto-secundario">{{ pct(f, f.en_alerta) }}</span></td>
+              <td class="text-end cifra-tabular {{ 'valor-critico' if f.perdidos }}">{{ f.perdidos }}<span class="d-block texto-secundario fw-normal">{{ pct(f, f.perdidos) }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="fila-total">
+            <th scope="row" colspan="3">Total ({{ filas | length }} cursos)</th>
+            <td class="text-end cifra-tabular">{{ total.inscritos }}</td>
+            <td class="text-end cifra-tabular">{{ total.aprobados }}<span class="d-block texto-secundario">{{ pct(total, total.aprobados) }}</span></td>
+            <td class="text-end cifra-tabular">{{ total.en_alerta }}<span class="d-block texto-secundario">{{ pct(total, total.en_alerta) }}</span></td>
+            <td class="text-end cifra-tabular">{{ total.perdidos }}<span class="d-block texto-secundario">{{ pct(total, total.perdidos) }}</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio"><h2>No hay resultados para este corte</h2><p>Aparecen cuando los profesores envían el registro y se calculan las alertas.</p></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

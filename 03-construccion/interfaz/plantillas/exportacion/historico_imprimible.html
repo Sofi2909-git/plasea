@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Histórico {{ estudiante.codigo }}{% endblock %}
+{% block clase_cuerpo %}pagina-impresion{% endblock %}
+{% block cuerpo %}
+<div class="barra-impresion no-imprimir">
+  <span>Vista imprimible: use «Guardar como PDF» en el diálogo de impresión.</span>
+  <button type="button" class="btn btn-primary btn-sm" data-imprimir>Imprimir o guardar PDF</button>
+</div>
+<main id="contenido" class="hoja-impresion" tabindex="-1">
+  <header class="encabezado-impresion">
+    <img src="{{ url_for('static', filename='img/unisimon-verde.png') }}" alt="Universidad Simón Bolívar" width="78" height="50" class="logo-impresion">
+    <div>
+      <p class="mb-0 small">Universidad Simón Bolívar · Facultad de Ingeniería de Sistemas · PLASEA</p>
+      <h1>Histórico académico</h1>
+    </div>
+  </header>
+  <dl class="datos-impresion">
+    <div><dt>Estudiante</dt><dd>{{ estudiante.nombres }}</dd></div>
+    <div><dt>Código</dt><dd>{{ estudiante.codigo }}</dd></div>
+    <div><dt>Programa</dt><dd>{{ estudiante.programa_academico.nombre }}</dd></div>
+    <div><dt>Cohorte</dt><dd>{{ estudiante.periodo_ingreso }}</dd></div>
+  </dl>
+  {% for s in semestres %}
+    <section class="semestre-impresion">
+      <h2>{{ s.periodo.identificador }} · semestre {{ s.semestre_cursado }} <span>{{ s.aprobadas }} aprobada(s), {{ s.perdidas }} perdida(s)</span></h2>
+      {% include "alertas/_tabla_historico.html" %}
+    </section>
+  {% else %}
+    <p>El estudiante no tiene semestres registrados en PLASEA.</p>
+  {% endfor %}
+  <footer class="pie-impresion">
+    Generado el {{ generado_en | fecha_hora }} por {{ generado_por }}. Prototipo académico con datos ficticios.
+  </footer>
+</main>
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
+{% endblock %}

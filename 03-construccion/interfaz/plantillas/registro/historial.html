@@ -1,0 +1,78 @@
+{% extends "app.html" %}
+{% block titulo %}Historial de cambios{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Historial de cambios</h1>
+    <p>Correcciones de notas y asistencia (incluidas las hechas en reaperturas) con valor anterior, valor nuevo, motivo, usuario y fecha.</p>
+  </div>
+</div>
+<form method="get" class="tarjeta tarjeta-cuerpo mb-4 barra-filtros" aria-label="Filtrar cambios">
+  <div>
+    <label class="form-label" for="h-curso">Curso</label>
+    <select class="form-select" id="h-curso" name="curso">
+      <option value="">Todos</option>
+      {% for cid, etiqueta in cursos %}<option value="{{ cid }}" {% if filtros.curso_id == cid %}selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="form-label" for="h-estudiante">Estudiante (código o nombre)</label>
+    <input class="form-control" type="search" id="h-estudiante" name="estudiante" value="{{ filtros.estudiante or '' }}" maxlength="150">
+  </div>
+  <div>
+    <label class="form-label" for="h-desde">Desde</label>
+    <input class="form-control" type="date" id="h-desde" name="desde" value="{{ filtros.desde.isoformat() if filtros.desde else '' }}">
+  </div>
+  <div>
+    <label class="form-label" for="h-hasta">Hasta</label>
+    <input class="form-control" type="date" id="h-hasta" name="hasta" value="{{ filtros.hasta.isoformat() if filtros.hasta else '' }}">
+  </div>
+  <div class="acciones-filtro">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+    {% if parametros %}<a class="btn btn-outline-primary" href="{{ url_for('registro_asistencia_notas.historial') }}">Limpiar</a>{% endif %}
+  </div>
+</form>
+<section class="tarjeta" aria-labelledby="titulo-cambios">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-cambios" class="titulo-seccion mb-0">{{ pagina.total }} cambio(s)</h2>
+  </div>
+  {% if pagina.filas %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-cambios">
+        <caption class="visually-hidden">Cambios de notas y asistencia</caption>
+        <thead><tr><th scope="col">Fecha</th><th scope="col">Estudiante</th><th scope="col">Curso</th><th scope="col">Dato</th><th scope="col">Anterior</th><th scope="col">Nuevo</th><th scope="col">Motivo</th><th scope="col">Usuario</th></tr></thead>
+        <tbody>
+          {% for c in pagina.filas %}
+            {% set es_nota = c.tipo == "nota" %}
+            <tr>
+              <td class="text-nowrap cifra-tabular">{{ c.fecha | fecha_hora }}</td>
+              <td><span class="fw-semibold">{{ c.nombres }}</span><span class="d-block texto-secundario cifra-tabular">{{ c.codigo }}</span></td>
+              <td class="text-nowrap">{{ c.asignatura }} {{ c.curso }}</td>
+              <td class="text-nowrap">{% if es_nota %}Nota del corte {{ c.corte }}{% else %}Asistencia del {{ c.sesion | fecha }}{% endif %}
+                {% if c.reapertura_id %}<span class="insignia insignia-aviso">Reapertura</span>{% endif %}</td>
+              {% if es_nota %}
+                <td class="cifra-tabular">{{ c.anterior | replace(".", ",") }}</td><td class="cifra-tabular fw-semibold">{{ c.nuevo | replace(".", ",") }}</td>
+              {% else %}
+                <td>{{ "Ausente" if c.anterior in ("1", "true") else "Presente" }}</td><td class="fw-semibold">{{ "Ausente" if c.nuevo in ("1", "true") else "Presente" }}</td>
+              {% endif %}
+              <td class="celda-motivo">{{ c.motivo }}</td>
+              <td>{{ c.usuario }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pagina.paginas > 1 %}
+      <nav class="tarjeta-cuerpo d-flex justify-content-center" aria-label="Paginación">
+        <ul class="pagination">
+          <li class="page-item{% if pagina.pagina <= 1 %} disabled{% endif %}"><a class="page-link" href="{{ url_for('registro_asistencia_notas.historial', pagina=pagina.pagina - 1, **parametros) if pagina.pagina > 1 else '#' }}">Anterior</a></li>
+          <li class="page-item active"><span class="page-link" aria-current="page">{{ pagina.pagina }} de {{ pagina.paginas }}</span></li>
+          <li class="page-item{% if pagina.pagina >= pagina.paginas %} disabled{% endif %}"><a class="page-link" href="{{ url_for('registro_asistencia_notas.historial', pagina=pagina.pagina + 1, **parametros) if pagina.pagina < pagina.paginas else '#' }}">Siguiente</a></li>
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="estado-vacio"><h2>No hay cambios con estos filtros</h2><p>Aquí aparecen las correcciones que hacen los profesores después de enviar un registro o durante una reapertura.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

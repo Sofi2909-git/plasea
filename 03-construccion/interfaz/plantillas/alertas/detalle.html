@@ -1,0 +1,91 @@
+{% extends "app.html" %}
+{% block titulo %}Detalle de alerta{% endblock %}
+{% block contenido %}
+{% set e = d.estudiante %}{% set c = d.curso %}{% set sel = d.seleccionada %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('alertas_analitica.lista', periodo=c.periodo_academico_id, corte=sel.corte.numero if sel else None) }}">Alertas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ e.codigo }} · {{ c.asignatura.codigo }} {{ c.codigo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ e.nombres }}{% if d.riesgo_alto %} <span class="insignia insignia-riesgo align-middle">Riesgo alto</span>{% endif %}</h1>
+    <p>{{ e.codigo }} · <a href="mailto:{{ e.correo }}">{{ e.correo }}</a> · {{ c.asignatura.nombre }} ({{ c.asignatura.codigo }} {{ c.codigo }}) · {{ c.periodo_academico.identificador }} · profesor: {{ c.profesor.nombre_completo }}</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('alertas_analitica.historico', estudiante_id=e.id) }}">Histórico académico</a>
+</div>
+
+{% if not sel %}
+  <section class="tarjeta estado-vacio"><h2>Sin alertas calculadas</h2><p>Las alertas se calculan cuando el profesor envía el registro de un corte.</p></section>
+{% else %}
+{% set a = sel.alerta %}
+<section class="tarjeta tarjeta-cuerpo mb-4 detalle-alerta-cabecera" aria-labelledby="titulo-estado">
+  <div>
+    <h2 id="titulo-estado" class="titulo-seccion mb-2">Corte {{ sel.corte.numero }}</h2>
+    <span class="semaforo semaforo-{{ a.estado_alerta }} semaforo-grande">{{ {"roja": "Roja", "amarilla": "Amarilla", "verde": "Verde"}[a.estado_alerta] }}</span>
+    <p class="mb-0 mt-2">{% if d.motivo %}<strong>{{ motivos[d.motivo] }}</strong>{% else %}Sin alerta{% endif %}</p>
+    <p class="texto-secundario mb-0">{{ "Definitiva" if a.definitiva else "Provisional" }} · calculada el {{ a.calculada_en | fecha_hora }}</p>
+  </div>
+  <nav class="selector-cortes" aria-label="Elegir corte">
+    {% for f in d.cortes %}
+      {% if f.alerta %}
+        <a href="{{ url_for('alertas_analitica.lista_detalle', inscripcion_id=d.inscripcion.id, corte=f.corte.numero) }}" class="{{ 'activo' if f.corte.id == sel.corte.id }}" {% if f.corte.id == sel.corte.id %}aria-current="page"{% endif %}>Corte {{ f.corte.numero }}</a>
+      {% else %}
+        <span class="desactivado" aria-disabled="true">Corte {{ f.corte.numero }}</span>
+      {% endif %}
+    {% endfor %}
+  </nav>
+</section>
+
+<div class="rejilla-detalle">
+  <section class="tarjeta" aria-labelledby="titulo-notas">
+    <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-notas" class="titulo-seccion mb-0">Notas</h2></div>
+    <table class="table tabla-plasea tabla-compacta mb-0">
+      <caption class="visually-hidden">Notas por corte, acumulada y requerida</caption>
+      <thead><tr><th scope="col">Corte</th><th scope="col" class="text-end">Peso</th><th scope="col" class="text-end">Nota</th></tr></thead>
+      <tbody>
+        {% for f in d.cortes %}
+          <tr class="{{ 'fila-seleccionada' if f.corte.id == sel.corte.id }}">
+            <td>Corte {{ f.corte.numero }}</td>
+            <td class="text-end cifra-tabular">{{ f.corte.peso_porcentaje | porcentaje }} %</td>
+            <td class="text-end cifra-tabular fw-semibold {{ 'valor-critico' if f.nota is not none and d.configuracion and f.nota < d.configuracion.nota_aprobacion }}">{{ f.nota | decimal if f.nota is not none else "Sin nota" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <dl class="cifras-detalle tarjeta-cuerpo mb-0">
+      <div><dt>Nota acumulada</dt><dd class="cifra-tabular">{{ a.nota_acumulada | decimal(2) if a.nota_acumulada is not none else "Sin notas" }}</dd></div>
+      <div><dt>Nota requerida</dt><dd class="cifra-tabular {{ 'valor-critico' if a.nota_requerida is not none and a.nota_requerida > 5 }}">
+        {% if a.nota_requerida is none %}No aplica{% else %}{{ a.nota_requerida | decimal(2) }}{% endif %}</dd>
+        {% if a.nota_requerida is not none and a.nota_requerida > 5 %}<dd class="texto-critico">Perdida por nota: supera 5,0</dd>
+        {% elif a.nota_requerida is not none and a.nota_requerida <= 1 %}<dd class="texto-secundario">Aprobada por nota</dd>{% endif %}
+      </div>
+    </dl>
+  </section>
+
+  <section class="tarjeta" aria-labelledby="titulo-asistencia">
+    <div class="tarjeta-cuerpo">
+      <h2 id="titulo-asistencia" class="titulo-seccion">Inasistencia</h2>
+      <dl class="cifras-detalle mb-3">
+        <div><dt>Horas ausentes</dt><dd class="cifra-tabular">{{ a.horas_ausentes }} h</dd></div>
+        <div><dt>Horas dictadas</dt><dd class="cifra-tabular">{{ a.horas_dictadas }} de {{ a.horas_totales }} h</dd></div>
+        <div><dt>Acumulada</dt><dd class="cifra-tabular {{ 'valor-critico' if d.configuracion and a.porcentaje_inasistencia > d.configuracion.limite_perdida_inasistencia }}">{{ a.porcentaje_inasistencia | porcentaje }} %</dd></div>
+        <div><dt>Ritmo</dt><dd class="cifra-tabular">{{ (a.porcentaje_ritmo | porcentaje) ~ " %" if a.porcentaje_ritmo is not none else "Sin horas dictadas" }}</dd></div>
+      </dl>
+      {% if d.configuracion %}
+        {% set lim = d.configuracion.limite_perdida_inasistencia %}{% set ama = d.configuracion.umbral_amarillo_inasistencia %}
+        {% set pct = [a.porcentaje_inasistencia, 100] | min %}
+        <div class="medidor" role="img" aria-label="Inasistencia acumulada {{ a.porcentaje_inasistencia | porcentaje }} %; amarilla desde {{ ama | porcentaje }} % y pérdida sobre {{ lim | porcentaje }} %">
+          <div class="medidor-barra" data-ancho="{{ pct }}"></div>
+          <span class="medidor-marca" data-posicion="{{ ama }}"></span>
+          <span class="medidor-marca medidor-marca-roja" data-posicion="{{ lim }}"></span>
+        </div>
+        <p class="texto-secundario small mt-2 mb-0">Umbrales con que se calculó: amarilla desde {{ ama | porcentaje }} % (también para el ritmo), pérdida sobre {{ lim | porcentaje }} %.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endif %}
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
+{% endblock %}

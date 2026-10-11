@@ -13,7 +13,10 @@
     <h1>{{ estudiante.nombres }}</h1>
     <p>Código {{ estudiante.codigo }} · {{ estudiante.correo }} · {{ estudiante.programa_academico.nombre }} · cohorte {{ estudiante.periodo_ingreso }}</p>
   </div>
-  <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_editar', estudiante_id=estudiante.id) }}">Editar datos</a>
+  <div class="acciones-encabezado">
+    <a class="btn btn-outline-primary" href="{{ url_for('alertas_analitica.historico', estudiante_id=estudiante.id) }}">Histórico académico</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_editar', estudiante_id=estudiante.id) }}">Editar datos</a>
+  </div>
 </div>
 
 <div class="rejilla-detalle">
