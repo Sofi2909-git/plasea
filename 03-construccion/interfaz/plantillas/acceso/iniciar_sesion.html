@@ -1,0 +1,19 @@
+{% extends "publica.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Iniciar sesión{% endblock %}
+{% block contenido %}
+<h2 class="mb-1">Iniciar sesión</h2>
+<p class="texto-secundario mb-4">Use su correo institucional y su contraseña.</p>
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+<form method="post" novalidate data-un-envio>
+  {{ formulario.hidden_tag() }}
+  {{ campo(formulario.correo) }}
+  {{ campo(formulario.contrasena, contrasena=True) }}
+  <button type="submit" class="btn btn-primary w-100 mt-2">Iniciar sesión</button>
+</form>
+<p class="mt-3 mb-0 text-center">
+  <a href="{{ url_for('acceso_cuentas.recuperar_contrasena') }}">¿Olvidó su contraseña?</a>
+</p>
+<p class="acceso-nota">Después de {{ config.INTENTOS_FALLIDOS_MAXIMOS }} intentos fallidos seguidos, la cuenta se bloquea durante {{ config.DURACION_BLOQUEO_MINUTOS }} minutos.</p>
+{% endblock %}

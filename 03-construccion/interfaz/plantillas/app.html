@@ -27,6 +27,10 @@
               <span class="fw-semibold">{{ usuario_actual.nombre_completo }}</span>
               <small>{{ g.sesion.rol.nombre }}</small>
             </div>
+            <form method="post" action="{{ url_for('acceso_cuentas.cerrar_sesion') }}" class="m-0">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-salir">Cerrar sesión</button>
+            </form>
           </div>
         {% endif %}
       </div>

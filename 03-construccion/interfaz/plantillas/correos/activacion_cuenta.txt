@@ -1,0 +1,12 @@
+Hola, {{ nombre }}:
+
+El administrador del sistema creó su cuenta en PLASEA (Plataforma de Seguimiento Académico).
+
+Para activarla y definir su contraseña, abra este enlace:
+{{ enlace }}
+
+El enlace es de un solo uso y vence en {{ minutos }} minutos. Si vence, pida al administrador del sistema que le envíe uno nuevo.
+
+Si no esperaba este correo, puede ignorarlo.
+
+PLASEA - Facultad de Ingeniería de Sistemas

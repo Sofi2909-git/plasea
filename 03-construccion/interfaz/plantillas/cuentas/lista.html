@@ -1,0 +1,155 @@
+{% extends "app.html" %}
+{% block titulo %}Cuentas de usuario{% endblock %}
+{% set ruta_actual = request.full_path.rstrip("?") %}
+
+{% macro boton_estado(usuario, accion, etiqueta, clase="btn-outline-primary", confirmar=None) -%}
+  <form method="post" class="m-0"
+        action="{{ url_for('acceso_cuentas.lista_cuentas_estado', usuario_id=usuario.id, accion=accion) }}"
+        {% if confirmar %}data-confirmar="{{ confirmar }}"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="volver" value="{{ ruta_actual }}">
+    <button type="submit" class="btn btn-sm {{ clase }}"
+            aria-label="{{ etiqueta }} la cuenta de {{ usuario.nombre_completo }}">{{ etiqueta }}</button>
+  </form>
+{%- endmacro %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cuentas de usuario</h1>
+    <p>Busque una cuenta para modificarla o cambiar su estado. Las cuentas no se eliminan.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('acceso_cuentas.lista_cuentas_nueva') }}">Nueva cuenta</a>
+</div>
+
+<section class="tarjeta">
+  <form method="get" class="tarjeta-cuerpo barra-filtros" role="search" aria-label="Filtrar cuentas">
+    <div>
+      <label class="form-label" for="filtro-q">Nombre o correo</label>
+      <input class="form-control" type="search" id="filtro-q" name="q" value="{{ filtros.q }}" maxlength="150"
+             placeholder="Ej.: perez o profe1@">
+    </div>
+    <div>
+      <label class="form-label" for="filtro-rol">Rol</label>
+      <select class="form-select" id="filtro-rol" name="rol">
+        <option value="">Todos</option>
+        {% for rol in roles %}
+          <option value="{{ rol.codigo }}" {% if filtros.rol == rol.codigo %}selected{% endif %}>{{ rol.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filtro-estado">Estado</label>
+      <select class="form-select" id="filtro-estado" name="estado">
+        <option value="">Todos</option>
+        {% for codigo, nombre in estados.items() %}
+          <option value="{{ codigo }}" {% if filtros.estado == codigo %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="acciones-filtro">
+      <button type="submit" class="btn btn-primary flex-fill">Buscar</button>
+      {% if filtros.q or filtros.rol or filtros.estado %}
+        <a class="btn btn-outline-primary" href="{{ url_for('acceso_cuentas.lista_cuentas') }}">Limpiar</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if paginacion.total %}
+    <p class="resumen-resultados" aria-live="polite">
+      {{ paginacion.total }} {{ "cuenta" if paginacion.total == 1 else "cuentas" }}
+      {% if paginacion.pages > 1 %}· página {{ paginacion.page }} de {{ paginacion.pages }}{% endif %}
+    </p>
+    <div class="contenedor-tabla">
+      <table class="table table-hover tabla-plasea">
+        <caption class="visually-hidden">Cuentas de usuario</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for usuario in paginacion.items %}
+            {% set bloqueo_temporal = usuario.bloqueo_hasta and usuario.bloqueo_hasta > momento %}
+            {% set es_yo = usuario.id == usuario_actual.id %}
+            <tr>
+              <td class="fw-semibold">{{ usuario.nombre_completo }}{% if es_yo %} <span class="texto-secundario fw-normal">(usted)</span>{% endif %}</td>
+              <td class="celda-correo">{{ usuario.correo }}</td>
+              <td><span class="insignia insignia-rol">{{ usuario.rol.nombre }}</span></td>
+              <td>
+                <span class="insignia insignia-{{ usuario.estado_cuenta }}">{{ estados[usuario.estado_cuenta] }}</span>
+                {% if bloqueo_temporal %}
+                  <div class="small texto-secundario mt-1">Bloqueo temporal hasta {{ usuario.bloqueo_hasta | fecha_hora }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="celda-acciones">
+                  <a class="btn btn-sm btn-outline-primary"
+                     href="{{ url_for('acceso_cuentas.lista_cuentas_editar', usuario_id=usuario.id) }}"
+                     aria-label="Editar la cuenta de {{ usuario.nombre_completo }}">Editar</a>
+                  {% if usuario.estado_cuenta == "pendiente_activacion" %}
+                    <form method="post" class="m-0"
+                          action="{{ url_for('acceso_cuentas.lista_cuentas_reenviar', usuario_id=usuario.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="volver" value="{{ ruta_actual }}">
+                      <button type="submit" class="btn btn-sm btn-outline-primary"
+                              aria-label="Reenviar el enlace de activación a {{ usuario.nombre_completo }}">Reenviar enlace</button>
+                    </form>
+                  {% endif %}
+                  {% if usuario.estado_cuenta == "inactiva" %}
+                    {{ boton_estado(usuario, "activar", "Activar") }}
+                  {% endif %}
+                  {% if usuario.estado_cuenta == "bloqueada" or bloqueo_temporal %}
+                    {{ boton_estado(usuario, "desbloquear", "Desbloquear") }}
+                  {% endif %}
+                  {% if usuario.estado_cuenta == "activa" and not es_yo %}
+                    {{ boton_estado(usuario, "bloquear", "Bloquear", "btn-peligro",
+                       "¿Bloquear la cuenta de " ~ usuario.nombre_completo ~ "? Se cerrarán sus sesiones abiertas.") }}
+                  {% endif %}
+                  {% if usuario.estado_cuenta != "inactiva" and not es_yo %}
+                    {{ boton_estado(usuario, "desactivar", "Desactivar", "btn-peligro",
+                       "¿Desactivar la cuenta de " ~ usuario.nombre_completo ~ "? Se cerrarán sus sesiones abiertas.") }}
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if paginacion.pages > 1 %}
+      <nav class="tarjeta-cuerpo d-flex justify-content-center" aria-label="Paginación de cuentas">
+        <ul class="pagination">
+          {% set args = dict(filtros) %}
+          <li class="page-item{% if not paginacion.has_prev %} disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('acceso_cuentas.lista_cuentas', pagina=paginacion.prev_num, **args) if paginacion.has_prev else '#' }}">Anterior</a>
+          </li>
+          {% for numero in paginacion.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+            {% if numero %}
+              <li class="page-item{% if numero == paginacion.page %} active{% endif %}">
+                <a class="page-link" href="{{ url_for('acceso_cuentas.lista_cuentas', pagina=numero, **args) }}"
+                   {% if numero == paginacion.page %}aria-current="page"{% endif %}>{{ numero }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item{% if not paginacion.has_next %} disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('acceso_cuentas.lista_cuentas', pagina=paginacion.next_num, **args) if paginacion.has_next else '#' }}">Siguiente</a>
+          </li>
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="estado-vacio">
+      <h2>No hay cuentas que coincidan</h2>
+      <p>Revise el texto de búsqueda o quite algún filtro.</p>
+      <a class="btn btn-outline-primary" href="{{ url_for('acceso_cuentas.lista_cuentas') }}">Ver todas las cuentas</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -2,6 +2,7 @@
    PLASEA - Tokens de diseño y componentes propios
    Base institucional: #09843B, #FFFFFF, #D3E8B5. Contrastes verificados (WCAG AA):
    - blanco sobre --plasea-verde (4,8:1); --plasea-verde-texto sobre --plasea-verde-claro (5,5:1)
+   - nunca texto blanco sobre --plasea-verde-claro
    ========================================================================== */
 
 :root {

@@ -1,0 +1,15 @@
+{% extends "publica.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<h2 class="mb-1">{{ titulo }}</h2>
+<p class="texto-secundario mb-4">Defina la contraseña con la que iniciará sesión.</p>
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+<form method="post" novalidate data-un-envio>
+  {{ formulario.hidden_tag() }}
+  {{ campo(formulario.contrasena, ayuda=politica, contrasena=True) }}
+  {{ campo(formulario.confirmacion, contrasena=True) }}
+  <button type="submit" class="btn btn-primary w-100 mt-2">Guardar contraseña</button>
+</form>
+{% endblock %}

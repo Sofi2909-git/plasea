@@ -2,7 +2,7 @@
 
 Las pruebas funcionales y de seguridad usan una base de datos MariaDB de pruebas,
 distinta de la de desarrollo, indicada en la variable ``URL_BASE_DATOS_PRUEBAS``
-(ejemplo: mysqlpymysql://usuario:clave@localhost:3306/plasea_pruebas?charset=utf8mb4).
+(ejemplo: mysql+pymysql://usuario:clave@localhost:3306/plasea_pruebas?charset=utf8mb4).
 Si la variable no existe, esas pruebas se omiten. Las tablas se crean desde los
 modelos y se vacían antes de cada prueba: NUNCA apunte esta variable a la base de
 datos de desarrollo.
@@ -101,7 +101,7 @@ def correos(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, str]]:
 def token_del_correo(correo: dict[str, str]) -> str:
     """Extrae el token del enlace incluido en un correo capturado."""
     coincidencia = re.search(
-        r"/(?:activar-cuenta|restablecer-contrasena)/(\S)", correo["cuerpo"]
+        r"/(?:activar-cuenta|restablecer-contrasena)/(\S+)", correo["cuerpo"]
     )
     assert coincidencia, "El correo no contiene un enlace"
     return coincidencia.group(1)

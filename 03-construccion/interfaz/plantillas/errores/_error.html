@@ -5,6 +5,6 @@
   <p class="h6 texto-secundario mb-1">Código {% block codigo %}{% endblock %}</p>
   <h1 class="h3">{% block titulo_error %}{% endblock %}</h1>
   <p>{% block descripcion %}{% endblock %}</p>
-  <a class="btn btn-primary" href="/">Ir al inicio</a>
+  <a class="btn btn-primary" href="{{ url_for('acceso_cuentas.raiz') }}">Ir al inicio</a>
 </section>
 {% endblock %}
