@@ -1,0 +1,51 @@
+{% extends "app.html" %}
+{% block titulo %}Estructura académica{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Estructura académica</h1>
+    <p>Base sobre la que se calculan notas, inasistencia y alertas.</p>
+  </div>
+</div>
+{% include "estructura/_navegacion.html" %}
+
+<div class="rejilla-resumen">
+  <section class="tarjeta tarjeta-cuerpo">
+    <h2 class="titulo-seccion">Período en curso</h2>
+    {% if en_curso %}
+      <p class="dato-grande">{{ en_curso.identificador }}</p>
+      <p class="texto-secundario mb-2">{{ en_curso.fecha_inicio | fecha }} a {{ en_curso.fecha_fin | fecha }}</p>
+      <p class="mb-3">{{ en_curso.cortes | length }} de 3 cortes definidos · {{ en_curso.festivos | length }} festivos</p>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estructura_academica.panel_periodo', periodo_id=en_curso.id) }}">Ver período</a>
+    {% else %}
+      <p class="texto-secundario">No hay un período marcado como en curso.</p>
+      <a class="btn btn-sm btn-primary" href="{{ url_for('estructura_academica.panel_periodos') }}">Ir a períodos</a>
+    {% endif %}
+  </section>
+  <section class="tarjeta tarjeta-cuerpo">
+    <h2 class="titulo-seccion">Cursos del período</h2>
+    {% set sin_horario = cursos_en_curso | selectattr("horas_totales", "equalto", 0) | list %}
+    <p class="dato-grande">{{ cursos_en_curso | length }}</p>
+    {% if sin_horario %}
+      <p class="mb-3"><span class="insignia insignia-pendiente_activacion">{{ sin_horario | length }} sin calendario</span></p>
+    {% else %}
+      <p class="texto-secundario mb-3">Todos tienen calendario generado.</p>
+    {% endif %}
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estructura_academica.panel_cursos') }}">Ver cursos</a>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo">
+    <h2 class="titulo-seccion">Umbrales vigentes</h2>
+    {% if umbral %}
+      <ul class="lista-compacta">
+        <li>Aprobación: <strong>{{ umbral.nota_aprobacion | decimal }}</strong></li>
+        <li>Pérdida por inasistencia: <strong>&gt; {{ umbral.limite_perdida_inasistencia | porcentaje }} %</strong></li>
+        <li>Amarilla por inasistencia: <strong>≥ {{ umbral.umbral_amarillo_inasistencia | porcentaje }} %</strong></li>
+        <li>Amarilla por nota: <strong>{{ umbral.nota_amarilla_minima | decimal }} a {{ umbral.nota_amarilla_maxima | decimal }}</strong></li>
+      </ul>
+    {% else %}
+      <p class="texto-secundario">No hay umbrales configurados.</p>
+    {% endif %}
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estructura_academica.panel_umbrales') }}">Ajustar umbrales</a>
+  </section>
+</div>
+{% endblock %}

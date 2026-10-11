@@ -1,0 +1,79 @@
+{% extends "app.html" %}
+{% block titulo %}Cursos{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cursos y horarios</h1>
+    <p>Cada curso pertenece a una asignatura y a un período, y tiene un solo docente.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('estructura_academica.panel_curso_nuevo', periodo=filtros.periodo or '', asignatura=filtros.asignatura or '') }}">Nuevo curso</a>
+</div>
+{% include "estructura/_navegacion.html" %}
+<section class="tarjeta">
+  <form method="get" class="tarjeta-cuerpo barra-filtros" aria-label="Filtrar cursos">
+    <div>
+      <label class="form-label" for="filtro-periodo">Período</label>
+      <select class="form-select" id="filtro-periodo" name="periodo">
+        <option value="">Todos</option>
+        {% for p in periodos %}<option value="{{ p.id }}" {% if filtros.periodo == p.id %}selected{% endif %}>{{ p.identificador }}{% if p.en_curso_marca %} (en curso){% endif %}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filtro-asignatura">Asignatura</label>
+      <select class="form-select" id="filtro-asignatura" name="asignatura">
+        <option value="">Todas</option>
+        {% for a in asignaturas %}<option value="{{ a.id }}" {% if filtros.asignatura == a.id %}selected{% endif %}>{{ a.codigo }} · {{ a.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filtro-profesor">Docente</label>
+      <select class="form-select" id="filtro-profesor" name="profesor">
+        <option value="">Todos</option>
+        {% for p in profesores %}<option value="{{ p.id }}" {% if filtros.profesor == p.id %}selected{% endif %}>{{ p.nombre_completo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="acciones-filtro">
+      <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+    </div>
+  </form>
+  {% if filas %}
+    <p class="resumen-resultados">{{ filas | length }} curso(s)</p>
+    <div class="contenedor-tabla">
+      <table class="table table-hover tabla-plasea">
+        <caption class="visually-hidden">Cursos</caption>
+        <thead><tr>
+          <th scope="col">Asignatura</th><th scope="col">Curso</th><th scope="col">Período</th><th scope="col">Docente</th>
+          <th scope="col">Horario</th><th scope="col" class="text-end">Horas totales</th><th scope="col" class="text-end">Inscritos</th>
+          <th scope="col" class="text-end">Acciones</th>
+        </tr></thead>
+        <tbody>
+          {% for fila in filas %}
+            {% set curso = fila.curso %}
+            <tr>
+              <td><span class="fw-semibold">{{ curso.asignatura.codigo }}</span> <span class="texto-secundario">{{ curso.asignatura.nombre }}</span></td>
+              <td class="fw-semibold">{{ curso.codigo }}</td>
+              <td class="text-nowrap">{{ curso.periodo_academico.identificador }}</td>
+              <td>{{ curso.profesor.nombre_completo }}</td>
+              <td class="text-nowrap">
+                {% for b in curso.bloques_horario %}<div>{{ dias[b.dia_semana][:3] }} {{ b.hora_inicio | hora }}–{{ b.hora_fin | hora }}</div>
+                {% else %}<span class="insignia insignia-pendiente_activacion">Sin horario</span>{% endfor %}
+              </td>
+              <td class="text-end">{{ fila.horas_totales or "—" }}</td>
+              <td class="text-end">{{ fila.inscritos }}</td>
+              <td><div class="celda-acciones">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estructura_academica.panel_curso', curso_id=curso.id) }}"
+                   aria-label="Ver el curso {{ curso.asignatura.codigo }} {{ curso.codigo }}">Ver</a>
+              </div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>No hay cursos con estos filtros</h2>
+      <p>Cambie el período o registre un curso nuevo.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

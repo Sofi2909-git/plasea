@@ -1,0 +1,137 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Curso {{ curso.asignatura.codigo }} {{ curso.codigo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_cursos', periodo=curso.periodo_academico_id) }}">Cursos</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ curso.asignatura.codigo }} {{ curso.codigo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ curso.asignatura.nombre }} · {{ curso.codigo }}</h1>
+    <p>{{ curso.asignatura.codigo }} · período {{ curso.periodo_academico.identificador }} · docente: {{ curso.profesor.nombre_completo }}</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_curso_editar', curso_id=curso.id) }}">Editar curso</a>
+</div>
+{% include "estructura/_navegacion.html" %}
+
+<div class="rejilla-detalle">
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-horario">
+    <h2 id="titulo-horario" class="titulo-seccion">Horario semanal</h2>
+    <p class="texto-secundario">Bloques de 1, 2 o 3 horas que no se solapan. Programadas: <strong>{{ horas_programadas }} h</strong> de {{ curso.asignatura.horas_semanales }} h semanales de la asignatura.</p>
+    {% if advertencia %}{{ mensaje(advertencia, "aviso") }}{% endif %}
+    {% if tiene_asistencia %}{{ mensaje("El curso ya tiene asistencia registrada: el horario y el calendario no se pueden cambiar.", "info") }}{% endif %}
+    {% if curso.bloques_horario %}
+      <ul class="lista-bloques" aria-label="Bloques del horario">
+        {% for bloque in curso.bloques_horario %}
+          <li>
+            <span><strong>{{ dias[bloque.dia_semana] }}</strong> {{ bloque.hora_inicio | hora }} a {{ bloque.hora_fin | hora }}</span>
+            {% if not tiene_asistencia %}
+              <form method="post" class="m-0" action="{{ url_for('estructura_academica.panel_bloque_eliminar', bloque_id=bloque.id) }}"
+                    data-confirmar="¿Quitar el bloque del {{ dias[bloque.dia_semana] }} {{ bloque.hora_inicio | hora }}? El calendario se regenerará.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-peligro" aria-label="Quitar el bloque del {{ dias[bloque.dia_semana] }}">Quitar</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mb-3">Este curso aún no tiene horario.</p>
+    {% endif %}
+    {% if not tiene_asistencia %}
+      <form method="post" action="{{ url_for('estructura_academica.panel_curso_bloque_nuevo', curso_id=curso.id) }}"
+            class="formulario-en-linea mt-3" novalidate data-un-envio>
+        {{ formulario_bloque.hidden_tag() }}
+        <div>{{ formulario_bloque.dia_semana.label(class_="form-label") }}{{ formulario_bloque.dia_semana(class_="form-select") }}</div>
+        <div>{{ formulario_bloque.hora_inicio.label(class_="form-label") }}{{ formulario_bloque.hora_inicio(class_="form-control", step="1800") }}</div>
+        <div>{{ formulario_bloque.hora_fin.label(class_="form-label") }}{{ formulario_bloque.hora_fin(class_="form-control", step="1800") }}</div>
+        <button type="submit" class="btn btn-primary">Agregar bloque</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-calendario">
+    <h2 id="titulo-calendario" class="titulo-seccion">Calendario de sesiones</h2>
+    <div class="cifras">
+      <div><span class="dato-grande">{{ total_sesiones }}</span><span class="texto-secundario">sesiones</span></div>
+      <div><span class="dato-grande">{{ total_horas }}</span><span class="texto-secundario">horas totales</span></div>
+    </div>
+    <p class="texto-secundario">Se calcula con el horario, las fechas del período y sus festivos, y se regenera solo mientras no haya asistencia registrada.</p>
+    {% if not tiene_asistencia and curso.bloques_horario %}
+      <form method="post" action="{{ url_for('estructura_academica.panel_curso_calendario', curso_id=curso.id) }}" class="mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-outline-primary">{{ "Regenerar calendario" if total_sesiones else "Generar calendario" }}</button>
+      </form>
+    {% endif %}
+    {% if sesiones %}
+      <details class="detalle-sesiones">
+        <summary>Ver las {{ total_sesiones }} sesiones</summary>
+        <div class="contenedor-tabla contenedor-tabla-bajo">
+          <table class="table table-sm tabla-plasea">
+            <caption class="visually-hidden">Sesiones del curso</caption>
+            <thead><tr><th scope="col">#</th><th scope="col">Fecha</th><th scope="col">Día</th><th scope="col">Hora</th><th scope="col" class="text-end">Horas</th></tr></thead>
+            <tbody>
+              {% for sesion in sesiones %}
+                <tr><td>{{ loop.index }}</td><td>{{ sesion.fecha | fecha }}</td><td>{{ dias[sesion.fecha.isoweekday()] }}</td>
+                    <td>{{ sesion.hora_inicio | hora }}–{{ sesion.hora_fin | hora }}</td><td class="text-end">{{ sesion.duracion_horas }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% endif %}
+  </section>
+</div>
+
+<section id="inscritos" class="tarjeta mt-4" aria-labelledby="titulo-inscritos">
+  <div class="tarjeta-cuerpo pb-0">
+    <h2 id="titulo-inscritos" class="titulo-seccion">Estudiantes inscritos</h2>
+    <p class="texto-secundario">Solo se inscriben estudiantes activos y una sola vez por curso. El retiro conserva la inscripción.</p>
+    <form method="post" action="{{ url_for('estudiantes_inscripciones.lista_inscribir', curso_id=curso.id) }}"
+          class="formulario-en-linea" novalidate data-un-envio>
+      {{ formulario_inscripcion.hidden_tag() }}
+      <div>{{ formulario_inscripcion.codigo_estudiante.label(class_="form-label") }}{{ formulario_inscripcion.codigo_estudiante(class_="form-control") }}</div>
+      <div>{{ formulario_inscripcion.semestre_cursado.label(class_="form-label") }}{{ formulario_inscripcion.semestre_cursado(class_="form-control", min=1, max=10) }}</div>
+      <button type="submit" class="btn btn-primary">Inscribir</button>
+    </form>
+  </div>
+  {% set vigentes = inscritos | selectattr("retirada_en", "none") | list %}
+  <p class="resumen-resultados mt-3">{{ vigentes | length }} inscrito(s) vigente(s){% if inscritos | length > vigentes | length %} · {{ inscritos | length - vigentes | length }} retirado(s){% endif %}</p>
+  {% if inscritos %}
+    <div class="contenedor-tabla">
+      <table class="table table-hover tabla-plasea">
+        <caption class="visually-hidden">Estudiantes del curso</caption>
+        <thead><tr><th scope="col">Código</th><th scope="col">Estudiante</th><th scope="col">Correo</th>
+          <th scope="col" class="text-end">Semestre</th><th scope="col">Situación</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>
+          {% for inscripcion in inscritos %}
+            {% set estudiante = inscripcion.matricula_periodo.estudiante %}
+            <tr>
+              <td class="text-nowrap">{{ estudiante.codigo }}</td>
+              <td><a href="{{ url_for('estudiantes_inscripciones.lista_detalle', estudiante_id=estudiante.id) }}">{{ estudiante.nombres }}</a></td>
+              <td class="celda-correo">{{ estudiante.correo }}</td>
+              <td class="text-end">{{ inscripcion.matricula_periodo.semestre_cursado }}</td>
+              <td>{% if inscripcion.retirada_en %}<span class="insignia insignia-inactiva">Retirado el {{ inscripcion.retirada_en | fecha }}</span>
+                  {% else %}<span class="insignia insignia-activa">Inscrito</span>{% endif %}</td>
+              <td><div class="celda-acciones">
+                {% if not inscripcion.retirada_en %}
+                  <form method="post" class="m-0" action="{{ url_for('estudiantes_inscripciones.lista_retirar', inscripcion_id=inscripcion.id) }}"
+                        data-confirmar="¿Retirar a {{ estudiante.nombres }} de este curso? La inscripción se conserva en el historial.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-peligro" aria-label="Retirar a {{ estudiante.nombres }}">Retirar</button>
+                  </form>
+                {% endif %}
+              </div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio"><h2>Sin estudiantes inscritos</h2><p>Inscriba estudiantes con su código y el semestre de la carrera que cursan.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

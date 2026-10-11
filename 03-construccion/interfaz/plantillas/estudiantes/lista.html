@@ -1,0 +1,72 @@
+{% extends "app.html" %}
+{% block titulo %}Estudiantes{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Estudiantes</h1>
+    <p>Los estudiantes no se eliminan: su situación se registra con el historial de estados.</p>
+  </div>
+  <div class="acciones-encabezado">
+    <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.importar') }}">Cargar CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('estudiantes_inscripciones.lista_nuevo') }}">Nuevo estudiante</a>
+  </div>
+</div>
+<section class="tarjeta">
+  <form method="get" class="tarjeta-cuerpo barra-filtros" role="search" aria-label="Filtrar estudiantes">
+    <div>
+      <label class="form-label" for="filtro-q">Código, nombre o correo</label>
+      <input class="form-control" type="search" id="filtro-q" name="q" value="{{ filtros.q }}" maxlength="150">
+    </div>
+    <div>
+      <label class="form-label" for="filtro-cohorte">Cohorte</label>
+      <select class="form-select" id="filtro-cohorte" name="cohorte">
+        <option value="">Todas</option>
+        {% for c in cohortes %}<option value="{{ c }}" {% if filtros.cohorte == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="filtro-estado">Estado vigente</label>
+      <select class="form-select" id="filtro-estado" name="estado">
+        <option value="">Todos</option>
+        {% for e in estados %}<option value="{{ e.codigo }}" {% if filtros.estado == e.codigo %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}
+        <option value="sin_estado" {% if filtros.estado == "sin_estado" %}selected{% endif %}>Sin estado</option>
+      </select>
+    </div>
+    <div class="acciones-filtro">
+      <button type="submit" class="btn btn-primary flex-fill">Buscar</button>
+      {% if filtros.q or filtros.cohorte or filtros.estado %}<a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista') }}">Limpiar</a>{% endif %}
+    </div>
+  </form>
+  {% if paginacion.total %}
+    <p class="resumen-resultados">{{ paginacion.total }} estudiante(s){% if paginacion.pages > 1 %} · página {{ paginacion.page }} de {{ paginacion.pages }}{% endif %}</p>
+    <div class="contenedor-tabla">
+      <table class="table table-hover tabla-plasea">
+        <caption class="visually-hidden">Estudiantes</caption>
+        <thead><tr><th scope="col">Código</th><th scope="col">Nombres</th><th scope="col">Correo</th>
+          <th scope="col">Cohorte</th><th scope="col">Estado vigente</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>
+          {% for estudiante, codigo_estado, nombre_estado in paginacion.items %}
+            <tr>
+              <td class="text-nowrap fw-semibold">{{ estudiante.codigo }}</td>
+              <td>{{ estudiante.nombres }}</td>
+              <td class="celda-correo">{{ estudiante.correo }}</td>
+              <td>{{ estudiante.periodo_ingreso }}</td>
+              <td>{% include "estudiantes/_insignia_estado.html" %}</td>
+              <td><div class="celda-acciones">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_detalle', estudiante_id=estudiante.id) }}"
+                   aria-label="Ver la ficha de {{ estudiante.nombres }}">Ver ficha</a>
+              </div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "estructura/_paginacion.html" %}
+  {% else %}
+    <div class="estado-vacio">
+      <h2>No hay estudiantes que coincidan</h2>
+      <p>Revise la búsqueda o los filtros, o registre un estudiante nuevo.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

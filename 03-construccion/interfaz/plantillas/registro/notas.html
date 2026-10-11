@@ -1,0 +1,68 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Notas del corte {{ corte.numero }}{% endblock %}
+{% block contenido %}
+{% set miga = "Notas del corte " ~ corte.numero %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Notas del corte {{ corte.numero }} <span class="insignia insignia-corte-{{ estado }} align-middle">{{ nombre_estado }}</span></h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · peso {{ corte.peso_porcentaje | porcentaje }} % · {{ corte.fecha_inicio | fecha }} a {{ corte.fecha_fin | fecha }} · carga hasta {{ corte.limite_carga | fecha }}</p>
+  </div>
+  <nav class="selector-cortes" aria-label="Cambiar de corte">
+    {% for c in cortes %}
+      <a href="{{ url_for('registro_asistencia_notas.notas', curso_id=curso.id, numero=c.numero) }}"
+         class="{{ 'activo' if c.numero == corte.numero }}" {% if c.numero == corte.numero %}aria-current="page"{% endif %}>Corte {{ c.numero }}</a>
+    {% endfor %}
+  </nav>
+</div>
+
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+{% if bloqueo %}{{ mensaje(bloqueo, "info") }}{% endif %}
+
+<section class="tarjeta" aria-labelledby="titulo-planilla">
+  <form method="post" novalidate data-un-envio data-planilla-notas>
+    {{ formulario.hidden_tag() }}
+    <div class="tarjeta-cuerpo barra-asistencia">
+      <div>
+        <h2 id="titulo-planilla" class="titulo-seccion mb-1">Nota consolidada</h2>
+        <p class="texto-secundario mb-0">Escala de 1,0 a 5,0 con un decimal. Puede guardar un borrador incompleto; el envío se hace cuando todos tengan nota.</p>
+      </div>
+      <p class="contador-ausentes" aria-live="polite">
+        <strong data-con-nota>{{ valores.values() | select | list | length }}</strong> de {{ filas | length }} con nota
+      </p>
+    </div>
+    {% if filas %}
+      <div class="contenedor-tabla">
+        <table class="table tabla-plasea tabla-notas">
+          <caption class="visually-hidden">Notas del corte {{ corte.numero }}</caption>
+          <thead><tr><th scope="col">Estudiante</th><th scope="col">Nota</th></tr></thead>
+          <tbody>
+            {% for fila in filas %}
+              {% set id_campo = "nota-" ~ fila.inscripcion_id %}
+              {% set falla = errores.get(fila.inscripcion_id) %}
+              <tr class="{{ 'fila-con-error' if falla }}">
+                <td><label for="{{ id_campo }}" class="m-0">{{ fila.nombres }}</label><span class="codigo-estudiante">{{ fila.codigo }}</span></td>
+                <td>
+                  <input class="form-control campo-nota{% if falla %} is-invalid{% endif %}" type="text" inputmode="decimal"
+                         id="{{ id_campo }}" name="{{ id_campo }}" value="{{ valores[fila.inscripcion_id] }}"
+                         maxlength="3" autocomplete="off" pattern="[1-5]([,.][0-9])?"
+                         {% if falla %}aria-invalid="true" aria-describedby="{{ id_campo }}-error"{% endif %}
+                         {% if bloqueo %}disabled{% endif %}>
+                  {% if falla %}<div class="invalid-feedback d-block" id="{{ id_campo }}-error">{{ falla }}</div>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="estado-vacio"><h2>No hay estudiantes inscritos</h2><p>Cuando el Auditor académico inscriba estudiantes, aparecerán aquí.</p></div>
+    {% endif %}
+    <div class="tarjeta-cuerpo acciones-formulario">
+      {% if not bloqueo and filas %}{{ formulario.guardar(class_="btn btn-primary") }}{% endif %}
+      <a class="btn btn-link" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">Volver al curso</a>
+    </div>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='js/registro.js') }}" defer></script>
+{% endblock %}

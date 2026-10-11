@@ -1,0 +1,101 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% block titulo %}Período {{ periodo.identificador }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_periodos') }}">Períodos</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ periodo.identificador }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>Período {{ periodo.identificador }}
+      {% if periodo.en_curso_marca %}<span class="insignia insignia-activa align-middle ms-2">En curso</span>{% endif %}
+    </h1>
+    <p>{{ periodo.fecha_inicio | fecha }} a {{ periodo.fecha_fin | fecha }} · {{ semanas }} semanas · {{ total_cursos }} curso(s)</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_periodo_editar', periodo_id=periodo.id) }}">Editar período</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_cursos', periodo=periodo.id) }}">Ver cursos</a>
+    {% if not periodo.en_curso_marca %}
+      <form method="post" class="m-0" action="{{ url_for('estructura_academica.panel_periodo_en_curso', periodo_id=periodo.id) }}"
+            data-confirmar="¿Marcar {{ periodo.identificador }} como período en curso?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="volver" value="{{ request.path }}">
+        <button type="submit" class="btn btn-primary">Marcar en curso</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% include "estructura/_navegacion.html" %}
+
+<section class="tarjeta mb-4" aria-labelledby="titulo-cortes">
+  <div class="tarjeta-cuerpo d-flex flex-wrap justify-content-between align-items-center gap-2 pb-0">
+    <h2 id="titulo-cortes" class="titulo-seccion mb-0">Cortes</h2>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('estructura_academica.panel_periodo_cortes', periodo_id=periodo.id) }}">
+      {{ "Editar cortes" if periodo.cortes else "Definir cortes" }}</a>
+  </div>
+  {% if periodo.cortes %}
+    <div class="contenedor-tabla mt-3">
+      <table class="table tabla-plasea">
+        <caption class="visually-hidden">Cortes del período</caption>
+        <thead><tr>
+          <th scope="col">Corte</th><th scope="col">Peso</th><th scope="col">Inicio</th><th scope="col">Fin</th>
+          <th scope="col">Límite de carga</th><th scope="col">Límite de corrección</th><th scope="col">Estado</th>
+        </tr></thead>
+        <tbody>
+          {% for corte in periodo.cortes %}
+            <tr>
+              <td class="fw-semibold">Corte {{ corte.numero }}</td>
+              <td class="text-nowrap">{{ corte.peso_porcentaje | porcentaje }} %</td>
+              <td>{{ corte.fecha_inicio | fecha }}</td>
+              <td>{{ corte.fecha_fin | fecha }}</td>
+              <td>{{ corte.limite_carga | fecha }}</td>
+              <td>{{ corte.limite_correccion | fecha }}</td>
+              <td>{% if corte.cerrado_en %}<span class="insignia insignia-inactiva">Cerrado</span>
+                  {% else %}<span class="insignia insignia-activa">Abierto</span>{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>Faltan los cortes</h2>
+      <p>Defina los 3 cortes con sus pesos (30 %, 30 % y 40 % por defecto) y sus fechas límite.</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-festivos">
+  <h2 id="titulo-festivos" class="titulo-seccion">Festivos</h2>
+  <p class="texto-secundario">Los días festivos no tienen sesiones. Al agregar o quitar un festivo se regeneran los calendarios de los cursos que aún no tienen asistencia.</p>
+  <form method="post" action="{{ url_for('estructura_academica.panel_periodo_festivo_nuevo', periodo_id=periodo.id) }}"
+        class="formulario-en-linea" novalidate data-un-envio>
+    {{ formulario_festivo.hidden_tag() }}
+    <div>
+      {{ formulario_festivo.fecha.label(class_="form-label") }}
+      {{ formulario_festivo.fecha(class_="form-control", min=periodo.fecha_inicio.isoformat(), max=periodo.fecha_fin.isoformat()) }}
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar festivo</button>
+  </form>
+  {% if periodo.festivos %}
+    <ul class="lista-festivos" aria-label="Festivos registrados">
+      {% for festivo in periodo.festivos %}
+        <li>
+          <span>{{ festivo.fecha | fecha }}</span>
+          <form method="post" class="m-0" action="{{ url_for('estructura_academica.panel_festivo_eliminar', festivo_id=festivo.id) }}"
+                data-confirmar="¿Quitar el festivo {{ festivo.fecha | fecha }}? Se regenerarán los calendarios afectados.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="volver" value="{{ request.path }}">
+            <button type="submit" class="btn btn-sm btn-peligro" aria-label="Quitar el festivo {{ festivo.fecha | fecha }}">Quitar</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="texto-secundario mt-3 mb-0">No hay festivos registrados en este período.</p>
+  {% endif %}
+</section>
+{% endblock %}

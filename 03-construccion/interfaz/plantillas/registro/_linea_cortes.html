@@ -1,0 +1,15 @@
+{# Estado de los 3 cortes de un curso (RF-26). Requiere: estados, corte_en_carga. #}
+<ol class="linea-cortes" aria-label="Estado de los cortes">
+  {% for item in estados %}
+    {% set en_carga = corte_en_carga and corte_en_carga.id == item.corte.id %}
+    <li class="paso-corte paso-{{ item.estado }}{% if en_carga %} paso-en-carga{% endif %}">
+      <span class="paso-titulo">Corte {{ item.corte.numero }} <span class="paso-peso">{{ item.corte.peso_porcentaje | porcentaje }} %</span></span>
+      <span class="insignia insignia-corte-{{ item.estado }}">{{ item.nombre }}</span>
+      <span class="paso-fecha">
+        {% if item.estado == "cerrado" %}Cerró el {{ (item.corte.cerrado_en.date() if item.corte.cerrado_en else item.corte.limite_correccion) | fecha }}
+        {% elif item.estado == "enviado" %}Corrige hasta {{ item.corte.limite_correccion | fecha }}
+        {% else %}Carga hasta {{ item.corte.limite_carga | fecha }}{% endif %}
+      </span>
+    </li>
+  {% endfor %}
+</ol>

@@ -1,0 +1,12 @@
+{# Migas y encabezado comunes de las pantallas de un curso del profesor. #}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('registro_asistencia_notas.mis_cursos') }}">Mis cursos</a></li>
+    {% if miga %}
+      <li class="breadcrumb-item"><a href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">{{ curso.asignatura.codigo }} {{ curso.codigo }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ miga }}</li>
+    {% else %}
+      <li class="breadcrumb-item active" aria-current="page">{{ curso.asignatura.codigo }} {{ curso.codigo }}</li>
+    {% endif %}
+  </ol>
+</nav>

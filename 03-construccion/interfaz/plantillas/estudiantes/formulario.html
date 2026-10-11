@@ -1,0 +1,41 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estudiantes_inscripciones.lista') }}">Estudiantes</a></li>
+    {% if estudiante %}<li class="breadcrumb-item"><a href="{{ url_for('estudiantes_inscripciones.lista_detalle', estudiante_id=estudiante.id) }}">{{ estudiante.codigo }}</a></li>{% endif %}
+    <li class="breadcrumb-item active" aria-current="page">{{ "Editar" if estudiante else "Nuevo" }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ titulo }}</h1>
+    <p>{{ "El estado se cambia desde la ficha del estudiante." if estudiante else "El estudiante queda en estado «Activo» desde la fecha indicada." }}</p>
+  </div>
+</div>
+<div class="row"><div class="col-lg-8 col-xl-7">
+  <section class="tarjeta tarjeta-cuerpo">
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-sm-5">{{ campo(formulario.codigo, ayuda="Único.") }}</div>
+        <div class="col-sm-7">{{ campo(formulario.nombres) }}</div>
+      </div>
+      {{ campo(formulario.correo) }}
+      <div class="row g-3">
+        <div class="col-sm-7">{{ campo(formulario.programa_academico_id) }}</div>
+        <div class="col-sm-5">{{ campo(formulario.periodo_ingreso, ayuda="Define la cohorte: AAAA-1 o AAAA-2.") }}</div>
+      </div>
+      {% if "fecha_estado_inicial" in formulario %}{{ campo(formulario.fecha_estado_inicial) }}{% endif %}
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_detalle', estudiante_id=estudiante.id) if estudiante else url_for('estudiantes_inscripciones.lista') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</div></div>
+{% endblock %}

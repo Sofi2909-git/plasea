@@ -191,6 +191,12 @@ body {
   padding-inline: 0.75rem !important;
 }
 
+/* Con seis opciones de menú los enlaces no se parten; el subtítulo de la marca
+   solo se muestra desde 1400 px (clase d-xxl-inline en app.html). */
+.barra-plasea .nav-link {
+  white-space: nowrap;
+}
+
 .barra-plasea .nav-link:hover {
   background: var(--plasea-verde-hover);
   color: var(--plasea-blanco);
@@ -612,4 +618,842 @@ body {
 
 .campo-contrasena .form-control.is-invalid {
   background-image: none;
+}
+
+/* ==========================================================================
+   Estructura académica, estudiantes y ayuda (E2, E3 y E12)
+   ========================================================================== */
+
+.subnavegacion {
+  margin-bottom: var(--plasea-espacio-4);
+  border-bottom: 1px solid var(--plasea-borde);
+  overflow-x: auto;
+}
+
+.subnavegacion ul {
+  display: flex;
+  gap: var(--plasea-espacio-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.subnavegacion a {
+  display: inline-block;
+  padding: 0.625rem 0.875rem;
+  color: var(--plasea-texto-secundario);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.subnavegacion a:hover {
+  color: var(--plasea-verde-texto);
+  border-bottom-color: var(--plasea-verde-claro);
+}
+
+.subnavegacion a.activa {
+  color: var(--plasea-verde-texto);
+  font-weight: 700;
+  border-bottom-color: var(--plasea-verde);
+}
+
+.titulo-seccion {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: var(--plasea-espacio-2);
+}
+
+.rejilla-resumen {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.rejilla-detalle {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rejilla-detalle > *,
+.rejilla-resumen > * {
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  .rejilla-detalle {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.dato-grande {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--plasea-verde-texto);
+}
+
+.cifras {
+  display: flex;
+  gap: var(--plasea-espacio-5);
+  margin-bottom: var(--plasea-espacio-3);
+}
+
+.cifras > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.lista-compacta {
+  padding-left: 1.1rem;
+  margin-bottom: var(--plasea-espacio-3);
+}
+
+.formulario-en-linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--plasea-espacio-2) var(--plasea-espacio-3);
+}
+
+.formulario-en-linea > div {
+  min-width: 9rem;
+}
+
+.lista-festivos,
+.lista-bloques {
+  list-style: none;
+  padding: 0;
+  margin: var(--plasea-espacio-3) 0 0;
+  display: grid;
+  gap: var(--plasea-espacio-2);
+}
+
+.lista-festivos {
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}
+
+.lista-festivos li,
+.lista-bloques li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-2);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--plasea-borde);
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-fondo);
+}
+
+.tabla-formulario td {
+  min-width: 9.5rem;
+}
+
+.tabla-formulario td:nth-child(2) {
+  min-width: 6rem;
+}
+
+.contenedor-tabla-bajo {
+  max-height: 22rem;
+}
+
+.detalle-sesiones summary {
+  cursor: pointer;
+  color: var(--plasea-verde-texto);
+  font-weight: 600;
+  margin-bottom: var(--plasea-espacio-2);
+}
+
+.insignia-info {
+  color: var(--plasea-info-texto);
+  background: var(--plasea-info-fondo);
+}
+
+.insignia-aviso {
+  color: var(--plasea-aviso-texto);
+  background: var(--plasea-aviso-fondo);
+}
+
+.contenido-lectura {
+  max-width: 52rem;
+}
+
+.lista-definiciones dt {
+  font-weight: 700;
+  margin-top: var(--plasea-espacio-2);
+}
+
+.lista-definiciones dd {
+  margin: 0 0 var(--plasea-espacio-2);
+  color: var(--plasea-texto-secundario);
+}
+
+/* ==========================================================================
+   Identidad institucional: logo de la Universidad Simón Bolívar
+   Se usa la versión blanca con fondo transparente (derivada de unisimon.png)
+   sobre el verde institucional, con el mismo verde de su fondo original.
+   ========================================================================== */
+.barra-plasea .marca-plasea {
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.25rem;
+  margin-right: var(--plasea-espacio-3);
+}
+
+.marca-logo {
+  display: block;
+  height: 2.5rem;
+  width: auto;
+}
+
+.marca-separador {
+  align-self: stretch;
+  width: 1px;
+  margin-block: 0.375rem;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.marca-texto {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--plasea-espacio-2);
+}
+
+.marca-acceso {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.marca-acceso img {
+  display: block;
+  height: 5rem;
+  width: auto;
+}
+
+.marca-acceso .marca-separador {
+  margin-block: 0.75rem;
+}
+
+.acceso-marca-movil {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (min-width: 992px) {
+  .acceso-marca-movil {
+    display: none;
+  }
+}
+
+/* Barra con logo: el nombre del usuario no se parte en varias líneas. */
+.usuario-sesion .fw-semibold {
+  display: block;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-salir {
+  white-space: nowrap;
+}
+
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .barra-plasea .nav-link {
+    padding-inline: 0.5rem !important;
+  }
+}
+
+.logo-insignia {
+  display: inline-flex;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-verde);
+}
+
+.logo-insignia img {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+}
+
+/* ==========================================================================
+   E3 - Carga por CSV (RF-24)
+   ========================================================================== */
+.acciones-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plasea-espacio-2);
+}
+
+.pasos-carga {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plasea-espacio-2);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--plasea-espacio-4);
+  counter-reset: paso;
+}
+
+.pasos-carga li {
+  counter-increment: paso;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--plasea-espacio-2);
+  padding: 0.375rem 0.875rem 0.375rem 0.375rem;
+  border: 1px solid var(--plasea-borde);
+  border-radius: 999px;
+  background: var(--plasea-superficie);
+  color: var(--plasea-texto-secundario);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.pasos-carga li::before {
+  content: counter(paso);
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--plasea-neutro-fondo);
+  color: var(--plasea-neutro-texto);
+  font-size: 0.75rem;
+}
+
+.pasos-carga li.actual {
+  border-color: var(--plasea-verde);
+  color: var(--plasea-verde-texto);
+}
+
+.pasos-carga li.actual::before {
+  background: var(--plasea-verde);
+  color: var(--plasea-blanco);
+}
+
+.pasos-carga li.hecho::before {
+  content: "✓";
+  background: var(--plasea-verde-claro);
+  color: var(--plasea-verde-activo);
+}
+
+.rejilla-cifras {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  margin-bottom: var(--plasea-espacio-3);
+}
+
+.rejilla-cifras > div {
+  display: flex;
+  flex-direction: column;
+  padding: var(--plasea-espacio-3);
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-fondo);
+}
+
+.rejilla-cifras .cifra-error .dato-grande {
+  color: var(--plasea-error-texto);
+}
+
+.acciones-formulario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--plasea-espacio-2);
+}
+
+.cifra-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   E4 - Registro de asistencia y notas del profesor (RF-26 a RF-29)
+   ========================================================================== */
+
+/* Estados de corte: siempre con texto; el color solo refuerza. */
+.insignia-corte-pendiente {
+  color: var(--plasea-aviso-texto);
+  background: var(--plasea-aviso-fondo);
+}
+
+.insignia-corte-enviado {
+  color: var(--plasea-info-texto);
+  background: var(--plasea-info-fondo);
+}
+
+.insignia-corte-cerrado {
+  color: var(--plasea-neutro-texto);
+  background: var(--plasea-neutro-fondo);
+}
+
+.lista-cursos {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+}
+
+.curso-profesor {
+  display: grid;
+  gap: var(--plasea-espacio-4);
+  padding: var(--plasea-espacio-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1200px) {
+  .curso-profesor {
+    grid-template-columns: minmax(14rem, 1fr) minmax(24rem, 1.6fr) minmax(14rem, 1fr);
+    align-items: start;
+  }
+}
+
+.curso-profesor-titulo {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.curso-profesor-titulo a {
+  color: var(--plasea-texto);
+  text-decoration: none;
+}
+
+.curso-profesor-titulo a:hover {
+  color: var(--plasea-verde-texto);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.curso-profesor-codigo {
+  margin: 0.125rem 0 var(--plasea-espacio-2);
+  color: var(--plasea-verde-texto);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.curso-profesor-horario {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--plasea-espacio-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.curso-profesor-horario li {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-fondo);
+  border: 1px solid var(--plasea-borde);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.linea-cortes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--plasea-borde);
+  border-radius: var(--plasea-radio);
+  overflow: hidden;
+}
+
+.paso-corte {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  padding: 0.75rem;
+  min-width: 0;
+  background: var(--plasea-superficie);
+}
+
+.paso-corte + .paso-corte {
+  border-left: 1px solid var(--plasea-borde);
+}
+
+.paso-en-carga {
+  background: var(--plasea-verde-suave);
+  box-shadow: inset 0 -3px 0 var(--plasea-verde);
+}
+
+.paso-titulo {
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+
+.paso-peso {
+  font-weight: 500;
+  color: var(--plasea-texto-secundario);
+  font-size: 0.8125rem;
+}
+
+.paso-fecha {
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+  font-variant-numeric: tabular-nums;
+}
+
+.pendiente-titulo {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  margin-bottom: var(--plasea-espacio-1);
+}
+
+.lista-pendientes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--plasea-espacio-3);
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.lista-pendientes li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lista-pendientes li::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.pendiente-falta {
+  color: var(--plasea-aviso-texto);
+}
+
+.pendiente-falta::before {
+  background: #c98a00;
+}
+
+.pendiente-ok {
+  color: var(--plasea-exito-texto);
+}
+
+.pendiente-ok::before {
+  background: var(--plasea-verde);
+}
+
+.acciones-curso,
+.acciones-cortes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plasea-espacio-2);
+}
+
+.acciones-cortes {
+  margin-top: var(--plasea-espacio-3);
+}
+
+.rejilla-curso {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rejilla-curso > * {
+  min-width: 0;
+}
+
+@media (min-width: 1200px) {
+  .rejilla-curso {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.tabla-sesiones {
+  min-width: 34rem;
+}
+
+.tabla-compacta {
+  min-width: 18rem;
+}
+
+.tabla-sesiones .fila-futura td {
+  color: var(--plasea-texto-secundario);
+}
+
+/* Asistencia: filas táctiles completas; se marca solo al ausente. */
+.barra-asistencia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-3);
+  border-bottom: 1px solid var(--plasea-borde);
+}
+
+.contador-ausentes {
+  margin: 0;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-fondo);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lista-asistencia {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) {
+  .lista-asistencia {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.lista-asistencia li {
+  border-bottom: 1px solid var(--plasea-borde);
+}
+
+@media (min-width: 768px) {
+  .lista-asistencia li:nth-child(odd) {
+    border-right: 1px solid var(--plasea-borde);
+  }
+}
+
+.fila-asistencia {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "casilla nombre estado"
+    "casilla codigo estado";
+  align-items: center;
+  column-gap: 0.875rem;
+  min-height: 3.5rem;
+  padding: 0.625rem var(--plasea-espacio-4);
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+.fila-asistencia:hover {
+  background: #f3f8ec;
+}
+
+.fila-asistencia .form-check-input {
+  grid-area: casilla;
+  width: 1.375rem;
+  height: 1.375rem;
+  margin: 0;
+  border: 2px solid var(--plasea-texto-secundario);
+}
+
+.fila-asistencia .form-check-input:checked {
+  background-color: var(--plasea-error-texto);
+  border-color: var(--plasea-error-texto);
+}
+
+.fila-asistencia-nombre {
+  grid-area: nombre;
+  font-weight: 600;
+}
+
+.fila-asistencia-codigo {
+  grid-area: codigo;
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+}
+
+.fila-asistencia-estado {
+  grid-area: estado;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--plasea-exito-texto);
+}
+
+.fila-asistencia.esta-ausente {
+  background: var(--plasea-error-fondo);
+}
+
+.fila-asistencia.esta-ausente .fila-asistencia-estado {
+  color: var(--plasea-error-texto);
+}
+
+.fila-asistencia:has(input:disabled) {
+  cursor: default;
+}
+
+/* Notas */
+.tabla-notas {
+  min-width: 0;
+}
+
+.tabla-notas .codigo-estudiante {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-notas td:last-child,
+.tabla-notas th:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Sesiones agrupadas por corte */
+.grupo-sesiones {
+  border-top: 1px solid var(--plasea-borde);
+}
+
+.grupo-sesiones > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem var(--plasea-espacio-4);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.grupo-sesiones > summary::-webkit-details-marker {
+  display: none;
+}
+
+.grupo-sesiones > summary::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease-out;
+}
+
+.grupo-sesiones[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.grupo-sesiones > summary:hover {
+  background: #f3f8ec;
+}
+
+.grupo-sesiones .resumen-grupo {
+  font-weight: 500;
+  color: var(--plasea-texto-secundario);
+  font-size: 0.875rem;
+}
+
+.grupo-sesiones .contenedor-tabla {
+  max-height: none;
+}
+
+.campo-nota {
+  width: 5.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.fila-con-error td {
+  background: var(--plasea-error-fondo);
+}
+
+.selector-cortes {
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-neutro-fondo);
+  gap: 0.25rem;
+}
+
+.selector-cortes a {
+  padding: 0.375rem 0.875rem;
+  border-radius: calc(var(--plasea-radio) - 0.125rem);
+  color: var(--plasea-texto);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.selector-cortes a:hover {
+  background: var(--plasea-superficie);
+}
+
+.selector-cortes a.activo {
+  background: var(--plasea-superficie);
+  color: var(--plasea-verde-texto);
+  box-shadow: 0 1px 2px rgba(16, 40, 24, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fila-asistencia {
+    transition: none;
+  }
+}
+
+/* En pantallas angostas los cortes se apilan como filas para no recortar el estado. */
+@media (max-width: 575.98px) {
+  .linea-cortes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .paso-corte {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  .paso-corte + .paso-corte {
+    border-left: 0;
+    border-top: 1px solid var(--plasea-borde);
+  }
+
+  .paso-fecha {
+    flex-basis: 100%;
+  }
+
+  .paso-en-carga {
+    box-shadow: inset 3px 0 0 var(--plasea-verde);
+  }
+}
+
+.hora-movil {
+  display: none;
+}
+
+@media (max-width: 575.98px) {
+  .tabla-sesiones {
+    min-width: 0;
+  }
+
+  .tabla-sesiones .columna-hora {
+    display: none;
+  }
+
+  .tabla-sesiones > :not(caption) > * > * {
+    padding-inline: 0.375rem;
+  }
+
+  .tabla-sesiones .insignia {
+    white-space: normal;
+  }
+
+  .hora-movil {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--plasea-texto-secundario);
+  }
 }

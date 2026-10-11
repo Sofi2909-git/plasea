@@ -1,0 +1,50 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_asignaturas') }}">Asignaturas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ "Editar" if asignatura else "Nueva" }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina"><div><h1>{{ titulo }}</h1></div></div>
+<div class="row"><div class="col-lg-8 col-xl-7">
+  <section class="tarjeta tarjeta-cuerpo">
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-sm-4">{{ campo(formulario.codigo, ayuda="Único. Letras, números o guion.") }}</div>
+        <div class="col-sm-8">{{ campo(formulario.nombre) }}</div>
+      </div>
+      {{ campo(formulario.programa_academico_id) }}
+      <div class="row g-3">
+        <div class="col-sm-4">{{ campo(formulario.creditos) }}</div>
+        <div class="col-sm-4">{{ campo(formulario.horas_semanales) }}</div>
+        <div class="col-sm-4">{{ campo(formulario.nivel) }}</div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_asignaturas') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+  {% if asignatura %}
+    <section class="tarjeta tarjeta-cuerpo mt-4">
+      <h2 class="titulo-seccion">Eliminar asignatura</h2>
+      {% if total_cursos %}
+        <p class="texto-secundario mb-0">Esta asignatura tiene {{ total_cursos }} curso(s) y no se puede eliminar.</p>
+      {% else %}
+        <p class="texto-secundario">No tiene cursos registrados, por eso se puede eliminar.</p>
+        <form method="post" action="{{ url_for('estructura_academica.panel_asignatura_eliminar', asignatura_id=asignatura.id) }}"
+              data-confirmar="¿Eliminar la asignatura {{ asignatura.codigo }}? Esta acción no se puede deshacer.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-peligro">Eliminar asignatura</button>
+        </form>
+      {% endif %}
+    </section>
+  {% endif %}
+</div></div>
+{% endblock %}

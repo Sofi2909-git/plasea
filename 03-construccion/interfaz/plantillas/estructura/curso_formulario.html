@@ -1,0 +1,40 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_cursos') }}">Cursos</a></li>
+    {% if curso %}<li class="breadcrumb-item"><a href="{{ url_for('estructura_academica.panel_curso', curso_id=curso.id) }}">{{ curso.asignatura.codigo }} {{ curso.codigo }}</a></li>{% endif %}
+    <li class="breadcrumb-item active" aria-current="page">{{ "Editar" if curso else "Nuevo curso" }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ titulo }}</h1>
+    {% if curso %}<p>{{ curso.asignatura.codigo }} · {{ curso.asignatura.nombre }} · período {{ curso.periodo_academico.identificador }}. La asignatura y el período no cambian.</p>
+    {% else %}<p>El código es único por asignatura y período (por ejemplo T01 y T02).</p>{% endif %}
+  </div>
+</div>
+<div class="row"><div class="col-lg-8 col-xl-7">
+  <section class="tarjeta tarjeta-cuerpo">
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      {% if not curso %}
+        <div class="row g-3">
+          <div class="col-sm-5">{{ campo(formulario.periodo_academico_id) }}</div>
+          <div class="col-sm-7">{{ campo(formulario.asignatura_id) }}</div>
+        </div>
+      {% endif %}
+      {{ campo(formulario.codigo) }}
+      {{ campo(formulario.profesor_usuario_id, ayuda="Cuentas con rol Profesor activas o pendientes de activación.") }}
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a class="btn btn-outline-primary" href="{{ url_for('estructura_academica.panel_curso', curso_id=curso.id) if curso else url_for('estructura_academica.panel_cursos') }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</div></div>
+{% endblock %}

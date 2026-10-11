@@ -1,0 +1,58 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Umbrales de alerta{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Umbrales de alerta</h1>
+    <p>Cada cambio crea una versión nueva y conserva las anteriores. Las alertas de cortes ya cerrados no se recalculan.</p>
+  </div>
+</div>
+{% include "estructura/_navegacion.html" %}
+<div class="rejilla-detalle">
+  <section class="tarjeta tarjeta-cuerpo" aria-labelledby="titulo-umbrales">
+    <h2 id="titulo-umbrales" class="titulo-seccion">Nueva versión</h2>
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      {{ campo(formulario.nota_aprobacion, ayuda="Escala de 1,0 a 5,0 con un decimal. Valor acordado: 3,0.") }}
+      <div class="row g-3">
+        <div class="col-sm-6">{{ campo(formulario.limite_perdida_inasistencia, ayuda="Se pierde al superarlo. Acordado: 30.") }}</div>
+        <div class="col-sm-6">{{ campo(formulario.umbral_amarillo_inasistencia, ayuda="Aplica también al ritmo. Acordado: 20.") }}</div>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-6">{{ campo(formulario.nota_amarilla_minima, ayuda="Acordado: 3,0.") }}</div>
+        <div class="col-sm-6">{{ campo(formulario.nota_amarilla_maxima, ayuda="Acordado: 3,4.") }}</div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-2">Guardar nueva versión</button>
+    </form>
+  </section>
+  <section class="tarjeta" aria-labelledby="titulo-historial">
+    <div class="tarjeta-cuerpo pb-0"><h2 id="titulo-historial" class="titulo-seccion">Historial</h2></div>
+    {% if historial %}
+      <div class="contenedor-tabla">
+        <table class="table tabla-plasea">
+          <caption class="visually-hidden">Versiones de los umbrales</caption>
+          <thead><tr><th scope="col">Vigente desde</th><th scope="col">Aprobación</th><th scope="col">Pérdida</th>
+            <th scope="col">Amarilla inasist.</th><th scope="col">Rango amarillo</th><th scope="col">Registró</th></tr></thead>
+          <tbody>
+            {% for version in historial %}
+              <tr>
+                <td class="text-nowrap">{{ version.vigente_desde | fecha_hora }}{% if loop.first %} <span class="insignia insignia-activa">Vigente</span>{% endif %}</td>
+                <td>{{ version.nota_aprobacion | decimal }}</td>
+                <td class="text-nowrap">{{ version.limite_perdida_inasistencia | porcentaje }} %</td>
+                <td class="text-nowrap">{{ version.umbral_amarillo_inasistencia | porcentaje }} %</td>
+                <td>{{ version.nota_amarilla_minima | decimal }} a {{ version.nota_amarilla_maxima | decimal }}</td>
+                <td>{{ version.creado_por.nombre_completo if version.creado_por else "Configuración inicial" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="estado-vacio"><h2>Sin versiones</h2><p>Guarde la primera configuración de umbrales.</p></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{# Tabla de sesiones de un corte (RF-28). Requiere: filas_grupo, curso, dias. #}
+<div class="contenedor-tabla">
+  <table class="table tabla-plasea tabla-sesiones">
+    <caption class="visually-hidden">Sesiones y estado de su asistencia</caption>
+    <thead>
+      <tr><th scope="col">Fecha</th><th scope="col" class="columna-hora">Hora</th><th scope="col">Asistencia</th><th scope="col" class="text-end"><span class="visually-hidden">Acción</span></th></tr>
+    </thead>
+    <tbody>
+      {% for fila in filas_grupo %}
+        {% set s = fila.sesion %}
+        <tr class="{{ 'fila-futura' if not fila.dictada }}">
+          <td class="text-nowrap"><span class="texto-secundario">{{ dias[s.fecha.isoweekday()][:3] }}</span> {{ s.fecha | fecha }}
+            <span class="hora-movil">{{ s.hora_inicio | hora }}–{{ s.hora_fin | hora }} ({{ s.duracion_horas }} h)</span></td>
+          <td class="text-nowrap columna-hora">{{ s.hora_inicio | hora }}–{{ s.hora_fin | hora }} <span class="texto-secundario">({{ s.duracion_horas }} h)</span></td>
+          <td>
+            {% if fila.registrada %}
+              <span class="insignia insignia-activa">{{ "Todos presentes" if fila.ausentes == 0 else fila.ausentes ~ " ausente(s)" }}</span>
+            {% elif fila.dictada and not fila.bloqueo %}
+              <span class="insignia insignia-aviso">Por registrar</span>
+            {% elif fila.dictada %}
+              <span class="insignia insignia-inactiva">Sin registro</span>
+            {% else %}
+              <span class="texto-secundario">Próxima</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {% if fila.dictada and not fila.bloqueo %}
+              <a class="btn btn-sm {{ 'btn-outline-primary' if fila.registrada else 'btn-primary' }}"
+                 href="{{ url_for('registro_asistencia_notas.asistencia', curso_id=curso.id, sesion_id=s.id) }}"
+                 aria-label="{{ 'Editar' if fila.registrada else 'Registrar' }} la asistencia del {{ s.fecha | fecha }}">{{ "Editar" if fila.registrada else "Registrar" }}</a>
+            {% elif fila.dictada %}
+              <a class="btn btn-sm btn-link" href="{{ url_for('registro_asistencia_notas.asistencia', curso_id=curso.id, sesion_id=s.id) }}"
+                 aria-label="Ver la asistencia del {{ s.fecha | fecha }}">Ver</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

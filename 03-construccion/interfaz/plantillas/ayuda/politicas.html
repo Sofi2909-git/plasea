@@ -1,0 +1,48 @@
+{% extends "app.html" if usuario_actual else "base.html" %}
+{% block titulo %}Políticas de datos y de uso{% endblock %}
+{% block cuerpo %}
+  {% if usuario_actual %}{{ super() }}{% else %}
+    <main id="contenido" class="contenido-principal" tabindex="-1">
+      <div class="container-xl">
+        <p class="mb-4"><a href="{{ url_for('acceso_cuentas.iniciar_sesion') }}">← Volver a iniciar sesión</a></p>
+        {{ self.contenido() }}
+      </div>
+    </main>
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Políticas de tratamiento de datos y de uso</h1>
+    <p>PLASEA · Plataforma de Seguimiento Académico</p>
+  </div>
+</div>
+<div class="contenido-lectura">
+  <div class="mensaje mensaje-info" role="note">
+    <span class="mensaje-icono" aria-hidden="true">i</span>
+    <div><strong>Este prototipo opera únicamente con datos ficticios.</strong> No contiene información real de estudiantes, profesores ni funcionarios de la universidad.</div>
+  </div>
+  <section class="tarjeta tarjeta-cuerpo mb-4">
+    <h2 class="titulo-seccion">Tratamiento de datos personales</h2>
+    <p>El diseño de PLASEA sigue los principios de la Ley 1581 de 2012 de protección de datos personales de Colombia:</p>
+    <dl class="lista-definiciones">
+      <dt>Finalidad</dt><dd>Los datos se usan solo para el seguimiento académico: calcular notas acumuladas, inasistencia, alertas y continuidad entre semestres.</dd>
+      <dt>Datos que se tratan</dt><dd>De los estudiantes: código estudiantil, nombres, correo, programa, período de ingreso, inscripciones, notas, asistencia y estado académico. De los usuarios: nombre, correo y rol.</dd>
+      <dt>Acceso restringido</dt><dd>Cada rol ve únicamente las funciones y los datos que le corresponden. El control se hace en el servidor.</dd>
+      <dt>Trazabilidad</dt><dd>Los inicios de sesión, los cambios administrativos, las correcciones y las exportaciones quedan registrados con usuario, fecha y hora.</dd>
+      <dt>Seguridad</dt><dd>Las contraseñas se guardan cifradas con una función de resumen (hash), las sesiones expiran por inactividad y la cuenta se bloquea tras intentos fallidos.</dd>
+    </dl>
+    <p class="mb-0">Si en el futuro la plataforma llegara a usar datos reales, se requeriría la autorización de la universidad, un alojamiento aprobado y la revisión de su área jurídica o del oficial de protección de datos.</p>
+  </section>
+  <section class="tarjeta tarjeta-cuerpo">
+    <h2 class="titulo-seccion">Condiciones de uso</h2>
+    <ul class="mb-0">
+      <li>La cuenta es personal. No comparta su contraseña.</li>
+      <li>Use la información solo para los fines académicos de su rol.</li>
+      <li>Las alertas son un apoyo para detectar riesgos a tiempo; las decisiones sobre cada estudiante corresponden a Bienestar Universitario y a los encargados de permanencia.</li>
+      <li>La información académica no se elimina: cada corrección conserva el valor anterior, el motivo, el usuario y la fecha.</li>
+      <li>Cierre su sesión al terminar, en especial en equipos compartidos.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}
