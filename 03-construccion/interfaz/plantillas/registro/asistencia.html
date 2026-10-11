@@ -11,7 +11,13 @@
 </div>
 
 {% if error %}{{ mensaje(error, "error") }}{% endif %}
-{% if bloqueo %}{{ mensaje(bloqueo, "info") }}{% endif %}
+{% if bloqueo and modo and modo.permite_correccion and sesion.asistencia_registrada_en %}
+  <div class="mensaje mensaje-info aviso-con-accion" role="status">
+    <span class="mensaje-icono" aria-hidden="true">i</span>
+    <div>{{ modo.mensaje }}</div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('registro_asistencia_notas.corregir_asistencia', curso_id=curso.id, sesion_id=sesion.id) }}">Corregir asistencia</a>
+  </div>
+{% elif bloqueo %}{{ mensaje(bloqueo, "info") }}{% endif %}
 
 <section class="tarjeta" aria-labelledby="titulo-lista">
   <form method="post" novalidate data-un-envio data-asistencia data-horas="{{ sesion.duracion_horas }}">

@@ -17,10 +17,23 @@
       </button>
       <div class="collapse navbar-collapse" id="menu-principal">
         <ul class="navbar-nav me-auto gap-xl-1 py-2 py-xl-0">
-          {% for opcion in menu %}
+          {% for opcion in menu if not opcion.grupo %}
             <li class="nav-item">
               <a class="nav-link{% if opcion.activa %} active{% endif %}" href="{{ opcion.url }}"
                  {% if opcion.activa %}aria-current="page"{% endif %}>{{ opcion.etiqueta }}</a>
+            </li>
+          {% endfor %}
+          {% for grupo, opciones in menu | selectattr("grupo") | groupby("grupo") %}
+            {% set activo = opciones | selectattr("activa") | list | length > 0 %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle{% if activo %} active{% endif %}" href="#" role="button"
+                 data-bs-toggle="dropdown" aria-expanded="false">{{ grupo }}</a>
+              <ul class="dropdown-menu dropdown-menu-end menu-grupo">
+                {% for opcion in opciones %}
+                  <li><a class="dropdown-item{% if opcion.activa %} active{% endif %}" href="{{ opcion.url }}"
+                         {% if opcion.activa %}aria-current="page"{% endif %}>{{ opcion.etiqueta }}</a></li>
+                {% endfor %}
+              </ul>
             </li>
           {% endfor %}
         </ul>

@@ -1,0 +1,135 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Cierre de cortes{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cierre de cortes</h1>
+    <p>Seguimiento de los envíos de cada curso, cierre del corte y reaperturas excepcionales.</p>
+  </div>
+</div>
+
+{% if not corte %}
+  <section class="tarjeta estado-vacio">
+    <h2>No hay cortes para mostrar</h2>
+    <p>Marque un período en curso y defina sus cortes en Estructura académica.</p>
+  </section>
+{% else %}
+<form method="get" class="tarjeta tarjeta-cuerpo barra-filtros mb-4" aria-label="Elegir período y corte">
+  <div>
+    <label class="form-label" for="sel-periodo">Período</label>
+    <select class="form-select" id="sel-periodo" name="periodo">
+      {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.identificador }}{% if p.en_curso_marca %} (en curso){% endif %}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="form-label" for="sel-corte">Corte</label>
+    <select class="form-select" id="sel-corte" name="corte">
+      {% for c in periodo.cortes | sort(attribute="numero") %}<option value="{{ c.numero }}" {% if c.id == corte.id %}selected{% endif %}>Corte {{ c.numero }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-check filtro-casilla">
+    <input class="form-check-input" type="checkbox" id="sel-pendientes" name="pendientes" value="1" {% if solo_pendientes %}checked{% endif %}>
+    <label class="form-check-label" for="sel-pendientes">Solo pendientes</label>
+  </div>
+  <div class="acciones-filtro"><button type="submit" class="btn btn-primary">Ver</button></div>
+</form>
+
+<section class="tarjeta tarjeta-cuerpo mb-4 resumen-corte" aria-labelledby="titulo-corte">
+  <div class="resumen-corte-encabezado">
+    <div>
+      <h2 id="titulo-corte" class="titulo-seccion mb-1">Corte {{ corte.numero }} de {{ periodo.identificador }}
+        {% if corte.cerrado_en %}<span class="insignia insignia-corte-cerrado align-middle">Cerrado</span>{% else %}<span class="insignia insignia-corte-pendiente align-middle">Abierto</span>{% endif %}
+      </h2>
+      <p class="texto-secundario mb-0">
+        {{ corte.fecha_inicio | fecha }} a {{ corte.fecha_fin | fecha }} · carga hasta {{ corte.limite_carga | fecha }} · corrección hasta {{ corte.limite_correccion | fecha }}
+        {% if corte.cerrado_en %} · cerrado el {{ corte.cerrado_en | fecha_hora }} ({{ "manual" if corte.tipo_cierre == "manual" else "automático" }}){% endif %}
+      </p>
+    </div>
+    {% if not corte.cerrado_en %}
+      {% if motivo_no_cierre %}
+        <p class="texto-secundario mb-0 nota-cierre">{{ motivo_no_cierre }} Si no se cierra antes, se cerrará solo al vencer el {{ corte.limite_correccion | fecha }}.</p>
+      {% else %}
+        <form method="post" action="{{ url_for('cierre_cortes.cerrar', corte_id=corte.id) }}" class="m-0"
+              data-confirmar="¿Cerrar el corte {{ corte.numero }}? Ningún profesor podrá modificarlo, los cursos sin enviar quedarán «sin registro» y las alertas serán definitivas." data-un-envio>
+          {{ formulario.hidden_tag() }}
+          <button type="submit" class="btn btn-peligro-solido">Cerrar corte {{ corte.numero }}</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="rejilla-cifras mt-3 mb-0">
+    <div><span class="dato-grande">{{ resumen.enviado + resumen.cerrado }}</span><span class="texto-secundario">enviados</span></div>
+    <div class="{{ 'cifra-aviso' if resumen.pendiente }}"><span class="dato-grande">{{ resumen.pendiente }}</span><span class="texto-secundario">pendientes</span></div>
+    <div><span class="dato-grande">{{ resumen.sin_registro }}</span><span class="texto-secundario">sin registro</span></div>
+    <div><span class="dato-grande">{{ resumen.total }}</span><span class="texto-secundario">cursos</span></div>
+  </div>
+</section>
+
+<section class="tarjeta" aria-labelledby="titulo-cursos">
+  <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-cursos" class="titulo-seccion mb-0">{{ "Cursos pendientes" if solo_pendientes else "Cursos del corte" }}</h2></div>
+  {% if filas %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea">
+        <caption class="visually-hidden">Estado del registro de cada curso en el corte</caption>
+        <thead><tr><th scope="col">Asignatura</th><th scope="col">Curso</th><th scope="col">Profesor</th><th scope="col">Estado</th><th scope="col">Enviado</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+        <tbody>
+          {% for f in filas %}
+            <tr>
+              <td><strong>{{ f.asignatura.codigo }}</strong> <span class="texto-secundario">{{ f.asignatura.nombre }}</span></td>
+              <td>{{ f.curso.codigo }}</td>
+              <td>{{ f.profesor }}</td>
+              <td>
+                <span class="insignia insignia-registro-{{ f.estado }}">{{ f.nombre_estado }}</span>
+                {% if f.reapertura %}<span class="insignia insignia-aviso">Reabierto</span>{% endif %}
+              </td>
+              <td class="text-nowrap cifra-tabular">{{ f.enviado_en | fecha_hora if f.enviado_en else "" }}</td>
+              <td>
+                <div class="celda-acciones">
+                  {% if f.reapertura %}
+                    <form method="post" action="{{ url_for('cierre_cortes.cerrar_reapertura', reapertura_id=f.reapertura.id) }}" class="m-0"
+                          data-confirmar="¿Cerrar la reapertura de {{ f.asignatura.codigo }} {{ f.curso.codigo }}? El curso volverá a bloquearse.">
+                      {{ formulario.hidden_tag() }}
+                      <button type="submit" class="btn btn-sm btn-outline-primary">Cerrar reapertura</button>
+                    </form>
+                  {% elif corte.cerrado_en and f.registro_id %}
+                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('cierre_cortes.reabrir', registro_id=f.registro_id) }}">Reabrir</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>{{ "No hay cursos pendientes" if solo_pendientes else "El período no tiene cursos" }}</h2>
+      <p>{{ "Todos los cursos enviaron su registro de este corte." if solo_pendientes else "Registre cursos en Estructura académica." }}</p>
+    </div>
+  {% endif %}
+</section>
+
+{% if reaperturas %}
+<section class="tarjeta mt-4" aria-labelledby="titulo-reaperturas">
+  <div class="tarjeta-cuerpo pb-2"><h2 id="titulo-reaperturas" class="titulo-seccion mb-0">Reaperturas del corte</h2></div>
+  <div class="contenedor-tabla contenedor-tabla-bajo">
+    <table class="table tabla-plasea">
+      <caption class="visually-hidden">Reaperturas excepcionales con su motivo</caption>
+      <thead><tr><th scope="col">Curso</th><th scope="col">Motivo</th><th scope="col">Abierta</th><th scope="col">Cerrada</th></tr></thead>
+      <tbody>
+        {% for r in reaperturas %}
+          <tr>
+            <td class="text-nowrap">{{ r.registro_curso_corte.curso.asignatura.codigo }} {{ r.registro_curso_corte.curso.codigo }}</td>
+            <td>{{ r.motivo }}</td>
+            <td class="text-nowrap">{{ r.abierta_en | fecha_hora }}<span class="d-block texto-secundario">{{ r.abierta_por.nombre_completo }}</span></td>
+            <td class="text-nowrap">{% if r.cerrada_en %}{{ r.cerrada_en | fecha_hora }}<span class="d-block texto-secundario">{{ r.cerrada_por.nombre_completo }}</span>{% else %}<span class="insignia insignia-aviso">Vigente</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

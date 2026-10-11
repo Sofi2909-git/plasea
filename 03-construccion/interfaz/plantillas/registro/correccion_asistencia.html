@@ -1,0 +1,59 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% from "macros/formularios.html" import campo %}
+{% block titulo %}Corregir asistencia {{ sesion.fecha | fecha }}{% endblock %}
+{% block contenido %}
+{% set miga = "Corregir asistencia" %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Corregir asistencia del {{ sesion.fecha | fecha }}</h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · {{ sesion.hora_inicio | hora }}–{{ sesion.hora_fin | hora }} ({{ sesion.duracion_horas }} h) · corte {{ corte.numero }}</p>
+  </div>
+</div>
+
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+{{ mensaje(modo.mensaje, "aviso" if modo.modo == "reapertura" else "info") }}
+
+{% if modo.permite_correccion %}
+<section class="tarjeta" aria-labelledby="titulo-lista">
+  <form method="post" novalidate data-un-envio data-asistencia data-horas="{{ sesion.duracion_horas }}">
+    {{ formulario.hidden_tag() }}
+    <div class="tarjeta-cuerpo barra-asistencia">
+      <div>
+        <h2 id="titulo-lista" class="titulo-seccion mb-1">Ausentes de la sesión</h2>
+        <p class="texto-secundario mb-0">
+          {% if modo.modo == "reapertura" %}En la reapertura solo puede quitar o restablecer ausencias ya registradas.{% else %}Cambie las marcas necesarias y escriba el motivo.{% endif %}
+        </p>
+      </div>
+      <p class="contador-ausentes" aria-live="polite">
+        <strong data-total>{{ marcados | length }}</strong> ausente(s) · <span data-horas-total>{{ (marcados | length) * sesion.duracion_horas }}</span> h
+      </p>
+    </div>
+    <ul class="lista-asistencia" aria-labelledby="titulo-lista">
+      {% for e in estudiantes %}
+        {% set ausente = e.inscripcion_id in marcados %}
+        <li>
+          <label class="fila-asistencia{% if ausente %} esta-ausente{% endif %}" for="ausente-{{ e.inscripcion_id }}">
+            <input class="form-check-input" type="checkbox" name="ausentes" value="{{ e.inscripcion_id }}"
+                   id="ausente-{{ e.inscripcion_id }}" {% if ausente %}checked{% endif %}>
+            <span class="fila-asistencia-nombre">{{ e.nombres }}</span>
+            <span class="fila-asistencia-codigo cifra-tabular">{{ e.codigo }}{% if e.inscripcion_id in originales %} · registrado ausente{% endif %}</span>
+            <span class="fila-asistencia-estado" aria-hidden="true">{{ "Ausente" if ausente else "Presente" }}</span>
+          </label>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="tarjeta-cuerpo">
+      {{ campo(formulario.motivo, ayuda="Obligatorio. Se guarda con el valor anterior y el nuevo de cada estudiante que cambie.") }}
+      <div class="acciones-formulario">
+        {{ formulario.guardar(class_="btn btn-primary") }}
+        <a class="btn btn-link" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}#sesiones">Cancelar</a>
+      </div>
+    </div>
+  </form>
+</section>
+{% else %}
+  <a class="btn btn-outline-primary" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">Volver al curso</a>
+{% endif %}
+<script src="{{ url_for('static', filename='js/registro.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Corregir notas del corte {{ corte.numero }}{% endblock %}
+{% block contenido %}
+{% set miga = "Corregir notas del corte " ~ corte.numero %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Corregir notas del corte {{ corte.numero }}</h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · cada nota que cambie necesita su motivo. Se guardan el valor anterior, el nuevo, el motivo, usted y la fecha.</p>
+  </div>
+</div>
+
+{% if error %}{{ mensaje(error, "error") }}{% endif %}
+{{ mensaje(modo.mensaje, "aviso" if modo.modo == "reapertura" else "info") }}
+
+{% if modo.permite_correccion %}
+<section class="tarjeta" aria-labelledby="titulo-correccion">
+  <form method="post" novalidate data-un-envio data-correccion-notas>
+    {{ formulario.hidden_tag() }}
+    <div class="tarjeta-cuerpo pb-2">
+      <h2 id="titulo-correccion" class="titulo-seccion mb-0">Notas registradas</h2>
+    </div>
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-correccion">
+        <caption class="visually-hidden">Corrección de notas con motivo</caption>
+        <thead><tr><th scope="col">Estudiante</th><th scope="col">Actual</th><th scope="col">Nueva</th><th scope="col">Motivo (si cambia)</th></tr></thead>
+        <tbody>
+          {% for fila in filas %}
+            {% set id_nota = "nota-" ~ fila.inscripcion_id %}
+            {% set id_motivo = "motivo-" ~ fila.inscripcion_id %}
+            {% set falla = errores.get(fila.inscripcion_id) %}
+            <tr class="{{ 'fila-con-error' if falla }}" data-fila-correccion>
+              <td><label for="{{ id_nota }}" class="m-0">{{ fila.nombres }}</label><span class="codigo-estudiante">{{ fila.codigo }}</span></td>
+              <td class="cifra-tabular fw-semibold">{{ fila.nota | decimal if fila.nota is not none else "Sin nota" }}</td>
+              <td>
+                <input class="form-control campo-nota{% if falla %} is-invalid{% endif %}" type="text" inputmode="decimal"
+                       id="{{ id_nota }}" name="{{ id_nota }}" value="{{ valores[fila.inscripcion_id] }}" maxlength="3" autocomplete="off"
+                       data-original="{{ fila.nota | decimal if fila.nota is not none else '' }}"
+                       {% if fila.nota is none %}disabled{% endif %}
+                       {% if falla %}aria-invalid="true" aria-describedby="{{ id_nota }}-error"{% endif %}>
+              </td>
+              <td>
+                <label class="visually-hidden" for="{{ id_motivo }}">Motivo de la corrección de {{ fila.nombres }}</label>
+                <input class="form-control campo-motivo" type="text" id="{{ id_motivo }}" name="{{ id_motivo }}" maxlength="500"
+                       value="{{ motivos.get(fila.inscripcion_id, '') }}" autocomplete="off" {% if fila.nota is none %}disabled{% endif %}>
+                {% if falla %}<div class="invalid-feedback d-block" id="{{ id_nota }}-error">{{ falla }}</div>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="tarjeta-cuerpo acciones-formulario">
+      {{ formulario.guardar(class_="btn btn-primary") }}
+      <a class="btn btn-link" href="{{ url_for('registro_asistencia_notas.notas', curso_id=curso.id, numero=corte.numero) }}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% else %}
+  <a class="btn btn-outline-primary" href="{{ url_for('registro_asistencia_notas.curso', curso_id=curso.id) }}">Volver al curso</a>
+{% endif %}
+<script src="{{ url_for('static', filename='js/registro.js') }}" defer></script>
+{% endblock %}

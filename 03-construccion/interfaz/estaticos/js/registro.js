@@ -95,3 +95,31 @@
     document.querySelectorAll("form[data-planilla-notas]").forEach(activarNotas);
   });
 })();
+
+/**
+ * Corrección de notas (RF-31): resalta el motivo cuando la nota cambia.
+ */
+(() => {
+  "use strict";
+
+  const normalizar = (texto) => texto.trim().replace(".", ",");
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("form[data-correccion-notas] [data-fila-correccion]").forEach((fila) => {
+      const nota = fila.querySelector(".campo-nota");
+      const motivo = fila.querySelector(".campo-motivo");
+      if (!nota || !motivo || nota.disabled) {
+        return;
+      }
+      const actualizar = () => {
+        const cambia = normalizar(nota.value) !== normalizar(nota.dataset.original || "");
+        motivo.required = cambia;
+        motivo.classList.toggle("requiere-motivo", cambia && motivo.value.trim() === "");
+        motivo.setAttribute("aria-required", String(cambia));
+      };
+      nota.addEventListener("input", actualizar);
+      motivo.addEventListener("input", actualizar);
+      actualizar();
+    });
+  });
+})();

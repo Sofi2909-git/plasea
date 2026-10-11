@@ -10,7 +10,7 @@ estados, matrículas, inscripciones, asistencia (solo ausentes) y notas. El
 estado de cada corte depende de la fecha actual: los cortes vencidos quedan
 cerrados y enviados, el corte en curso queda con borradores parciales.
 
-No genera alertas (RF-40 a RF-43): se calculan con los datos generados.
+Calcula las alertas (RF-43) de los cursos que quedan enviados o cerrados.
 
 Inserta por lotes (``insert`` con muchas filas) y recupera los identificadores
 con una consulta por tabla, así que el tiempo no crece con una consulta por fila.
@@ -54,7 +54,7 @@ from plasea.modelos import (
     Usuario,
     db,
 )
-from plasea.servicios import bitacora, calendario, periodos
+from plasea.servicios import alertas, bitacora, calendario, periodos
 from plasea.servicios.comunes import ErrorNegocio, ahora
 from plasea.servicios.cuentas import ROL_ADMINISTRADOR, ROL_PROFESOR
 
@@ -832,7 +832,7 @@ def generar(
                     ),
                     weights=(70, 20, 10),
                 )[0]
-                media = min(4.9, max(1.6, aleatorio.gauss(3.6, 0.6) - ausentismo * 2))
+                media = min(4.9, max(1.6, aleatorio.gauss(3.85, 0.55) - ausentismo * 2))
                 perfil[(matricula_id, curso.id)] = (ausentismo, media, retiro)
         _insertar(Inscripcion, inscripciones_filas)
         resumen["Inscripciones"] = len(inscripciones_filas)
@@ -952,6 +952,20 @@ def generar(
                 [{"sid": s, "quien": q, "cuando": c} for s, q, c in lote],
             )
         resumen["Sesiones con asistencia registrada"] = len(registradas)
+
+        # Alertas (RF-43) de los cursos que enviaron: definitivas en los cortes
+        # cerrados y provisionales en los abiertos.
+        db.session.flush()
+        enviados: dict[int, list[int]] = {}
+        for fila in registros_filas:
+            if fila["estado"] in ("enviado", "cerrado"):
+                enviados.setdefault(fila["corte_id"], []).append(fila["curso_id"])
+        total_alertas = 0
+        for periodo in objetos_periodo:
+            for corte in cortes_por_periodo[periodo.id]:
+                if corte.id in enviados:
+                    total_alertas += alertas.recalcular(corte, enviados[corte.id])
+        resumen["Alertas calculadas"] = total_alertas
         resumen["Ausencias"] = len(ausencias_filas)
         resumen["Notas de corte"] = len(notas_filas)
 

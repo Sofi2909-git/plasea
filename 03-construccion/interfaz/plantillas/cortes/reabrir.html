@@ -1,0 +1,32 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Reabrir curso{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('cierre_cortes.panel', periodo=registro.corte.periodo_academico_id, corte=registro.corte.numero) }}">Cierre de cortes</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Reabrir {{ registro.curso.asignatura.codigo }} {{ registro.curso.codigo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>Reabrir {{ registro.curso.asignatura.nombre }} · {{ registro.curso.codigo }}</h1>
+    <p>Corte {{ registro.corte.numero }} de {{ registro.corte.periodo_academico.identificador }} · profesor: {{ registro.curso.profesor.nombre_completo }}</p>
+  </div>
+</div>
+<div class="row"><div class="col-lg-8 col-xl-7">
+  <section class="tarjeta tarjeta-cuerpo">
+    {% if error %}{{ mensaje(error, "error") }}{% endif %}
+    {{ mensaje("Úsela solo ante una falla técnica. El profesor podrá modificar notas y asistencia ya registradas, con motivo; no podrá crear ni eliminar registros. La reapertura sigue vigente hasta que usted la cierre.", "aviso") }}
+    <form method="post" novalidate data-un-envio>
+      {{ formulario.hidden_tag() }}
+      {{ campo(formulario.motivo, ayuda="Queda en el registro de la reapertura y en la bitácora.") }}
+      <div class="acciones-formulario">
+        {{ formulario.reabrir(class_="btn btn-primary") }}
+        <a class="btn btn-link" href="{{ url_for('cierre_cortes.panel', periodo=registro.corte.periodo_academico_id, corte=registro.corte.numero) }}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</div></div>
+{% endblock %}

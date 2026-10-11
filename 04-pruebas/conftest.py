@@ -30,6 +30,11 @@ EVENTOS = (
     "intento_fallido",
     "cambio_administrativo",
     "importacion",
+    "envio_registro",
+    "correccion",
+    "cierre_corte",
+    "reapertura",
+    "cierre_reapertura",
 )
 ESTADOS_ESTUDIANTE = (
     ("activo", "Activo"),
@@ -101,6 +106,9 @@ def limpiar_datos(request: pytest.FixtureRequest) -> Iterator[None]:
         m.SesionUsuario,
         m.TokenCuenta,
         m.Alerta,
+        m.HistorialAusencia,
+        m.HistorialNota,
+        m.ReaperturaCurso,
         m.Ausencia,
         m.NotaCorte,
         m.RegistroCursoCorte,

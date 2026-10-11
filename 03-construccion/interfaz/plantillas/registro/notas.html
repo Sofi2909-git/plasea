@@ -17,7 +17,14 @@
 </div>
 
 {% if error %}{{ mensaje(error, "error") }}{% endif %}
-{% if bloqueo %}{{ mensaje(bloqueo, "info") }}{% endif %}
+{% if modo.modo == "carga" %}{# borrador: sin aviso #}
+{% elif modo.permite_correccion %}
+  <div class="mensaje mensaje-info aviso-con-accion" role="status">
+    <span class="mensaje-icono" aria-hidden="true">i</span>
+    <div>{{ modo.mensaje }}</div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('registro_asistencia_notas.corregir_notas', curso_id=curso.id, numero=corte.numero) }}">Corregir notas</a>
+  </div>
+{% else %}{{ mensaje(modo.mensaje or bloqueo, "info") }}{% endif %}
 
 <section class="tarjeta" aria-labelledby="titulo-planilla">
   <form method="post" novalidate data-un-envio data-planilla-notas>
@@ -64,5 +71,25 @@
     </div>
   </form>
 </section>
+{% if modo.modo == "carga" and filas %}
+<section class="tarjeta tarjeta-cuerpo mt-4 panel-envio" aria-labelledby="titulo-envio">
+  <div>
+    <h2 id="titulo-envio" class="titulo-seccion">Enviar el registro del corte {{ corte.numero }}</h2>
+    {% if pendientes %}
+      <p class="texto-secundario mb-2">Todavía no se puede enviar. Falta:</p>
+      <ul class="lista-pendientes mb-0">
+        {% for item in pendientes %}<li class="pendiente-falta">{{ item }}</li>{% endfor %}
+      </ul>
+    {% else %}
+      <p class="texto-secundario mb-0">Todos tienen nota y la asistencia está registrada hasta el {{ corte.fecha_fin | fecha }}. Al enviar se calculan las alertas; después solo podrá corregir con motivo hasta el {{ corte.limite_correccion | fecha }}.</p>
+    {% endif %}
+  </div>
+  <form method="post" action="{{ url_for('registro_asistencia_notas.enviar', curso_id=curso.id, numero=corte.numero) }}" class="m-0"
+        data-confirmar="¿Enviar el registro del corte {{ corte.numero }}? Después solo podrá corregir con motivo." data-un-envio>
+    {{ formulario_envio.hidden_tag() }}
+    <button type="submit" class="btn btn-primary" {% if pendientes %}disabled aria-disabled="true"{% endif %}>Enviar registro</button>
+  </form>
+</section>
+{% endif %}
 <script src="{{ url_for('static', filename='js/registro.js') }}" defer></script>
 {% endblock %}

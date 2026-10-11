@@ -1,0 +1,136 @@
+{% extends "app.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Alertas{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Estudiantes en alerta</h1>
+    <p>Rojas primero y luego amarillas; dentro de cada grupo, mayor nota requerida e inasistencia primero.</p>
+  </div>
+</div>
+
+{% if not corte %}
+  <section class="tarjeta estado-vacio">
+    <h2>No hay un período en curso con cortes</h2>
+    <p>Las alertas aparecen cuando los profesores envían el registro de un corte.</p>
+  </section>
+{% else %}
+{% set definitiva = corte.cerrado_en is not none %}
+<form method="get" class="tarjeta tarjeta-cuerpo mb-4" aria-label="Filtrar alertas">
+  <div class="barra-filtros filtros-alertas">
+    <div>
+      <label class="form-label" for="f-periodo">Período</label>
+      <select class="form-select" id="f-periodo" name="periodo">
+        {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.identificador }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="f-corte">Corte</label>
+      <select class="form-select" id="f-corte" name="corte">
+        {% for c, total in cortes %}<option value="{{ c.numero }}" {% if c.id == corte.id %}selected{% endif %}>Corte {{ c.numero }} ({{ total }})</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="f-asignatura">Asignatura</label>
+      <select class="form-select" id="f-asignatura" name="asignatura">
+        <option value="">Todas</option>
+        {% for a in asignaturas %}<option value="{{ a.id }}" {% if filtros.asignatura_id == a.id %}selected{% endif %}>{{ a.codigo }} · {{ a.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="f-curso">Curso</label>
+      <select class="form-select" id="f-curso" name="curso">
+        <option value="">Todos</option>
+        {% for c, etiqueta in cursos %}<option value="{{ c.id }}" {% if filtros.curso_id == c.id %}selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="f-tipo">Tipo</label>
+      <select class="form-select" id="f-tipo" name="tipo">
+        <option value="">Rojas y amarillas</option>
+        <option value="roja" {% if filtros.tipo == "roja" %}selected{% endif %}>Solo rojas</option>
+        <option value="amarilla" {% if filtros.tipo == "amarilla" %}selected{% endif %}>Solo amarillas</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label" for="f-motivo">Motivo</label>
+      <select class="form-select" id="f-motivo" name="motivo">
+        <option value="">Todos</option>
+        <option value="nota" {% if filtros.motivo == "nota" %}selected{% endif %}>Solo nota</option>
+        <option value="inasistencia" {% if filtros.motivo == "inasistencia" %}selected{% endif %}>Solo inasistencia</option>
+        <option value="ambos" {% if filtros.motivo == "ambos" %}selected{% endif %}>Nota e inasistencia</option>
+      </select>
+    </div>
+    <div class="form-check filtro-casilla">
+      <input class="form-check-input" type="checkbox" id="f-riesgo" name="riesgo" value="1" {% if filtros.solo_riesgo_alto %}checked{% endif %}>
+      <label class="form-check-label" for="f-riesgo">Solo riesgo alto</label>
+    </div>
+    <div class="acciones-filtro">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+      {% if parametros | length > 2 %}<a class="btn btn-outline-primary" href="{{ url_for('alertas_analitica.lista', periodo=periodo.id, corte=corte.numero) }}">Limpiar</a>{% endif %}
+    </div>
+  </div>
+</form>
+
+<div class="franja-resumen" role="group" aria-label="Resumen del corte">
+  <div class="franja-dato franja-roja"><span class="dato-grande">{{ resumen.roja }}</span><span>rojas</span></div>
+  <div class="franja-dato franja-amarilla"><span class="dato-grande">{{ resumen.amarilla }}</span><span>amarillas</span></div>
+  <div class="franja-dato"><span class="dato-grande">{{ resumen.riesgo_alto }}</span><span>estudiantes en riesgo alto</span></div>
+  <div class="franja-estado">
+    <span class="insignia {{ 'insignia-corte-cerrado' if definitiva else 'insignia-info' }}">{{ "Definitivas" if definitiva else "Provisionales" }}</span>
+    <span class="texto-secundario">{{ "Corte cerrado el " ~ (corte.cerrado_en | fecha_hora) if definitiva else "Con los datos enviados hasta hoy; serán definitivas al cerrar el corte." }}</span>
+  </div>
+</div>
+
+<section class="tarjeta" aria-labelledby="titulo-alertas">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-alertas" class="titulo-seccion mb-0">Corte {{ corte.numero }} de {{ periodo.identificador }}</h2>
+    <p class="texto-secundario mb-0">{{ paginacion.total }} alerta(s) con los filtros aplicados.</p>
+  </div>
+  {% if paginacion.items %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-alertas">
+        <caption class="visually-hidden">Estudiantes en alerta, ordenados por severidad</caption>
+        <thead>
+          <tr>
+            <th scope="col">Estado</th><th scope="col">Estudiante</th><th scope="col">Asignatura</th>
+            <th scope="col" class="text-end">Nota corte</th><th scope="col" class="text-end">Acumulada</th><th scope="col" class="text-end">Requerida</th>
+            <th scope="col" class="text-end">Inasistencia</th><th scope="col" class="text-end">Ritmo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set motivos = {"nota": "Por nota", "inasistencia": "Por inasistencia", "ambos": "Nota e inasistencia"} %}
+          {% for a in paginacion.items %}
+            {% set e = a.inscripcion.matricula_periodo.estudiante %}
+            {% set motivo = "ambos" if a.motivo_nota and a.motivo_inasistencia else ("nota" if a.motivo_nota else "inasistencia") %}
+            <tr>
+              <td>
+                <span class="semaforo semaforo-{{ a.estado_alerta }}">{{ "Roja" if a.estado_alerta == "roja" else "Amarilla" }}</span>
+                <span class="motivo-alerta">{{ motivos[motivo] }}</span>
+              </td>
+              <td>
+                <span class="fw-semibold">{{ e.nombres }}</span>
+                {% if e.id in en_riesgo %}<span class="insignia insignia-riesgo">Riesgo alto</span>{% endif %}
+                <span class="d-block texto-secundario cifra-tabular">{{ e.codigo }} · <a href="mailto:{{ e.correo }}">{{ e.correo }}</a></span>
+              </td>
+              <td><span class="fw-semibold">{{ a.inscripcion.curso.asignatura.codigo }} {{ a.inscripcion.curso.codigo }}</span><span class="d-block texto-secundario">{{ a.inscripcion.curso.asignatura.nombre }}</span></td>
+              <td class="text-end cifra-tabular {{ 'valor-critico' if a.motivo_nota and a.nota_corte is not none and a.estado_alerta == 'roja' }}">{{ a.nota_corte | decimal if a.nota_corte is not none else "Sin nota" }}</td>
+              <td class="text-end cifra-tabular">{{ a.nota_acumulada | decimal(2) if a.nota_acumulada is not none else "" }}</td>
+              <td class="text-end cifra-tabular">{{ a.nota_requerida | decimal(2) if a.nota_requerida is not none else "" }}{% if a.nota_requerida is not none and a.nota_requerida > 5 %}<span class="d-block texto-critico">Perdida por nota</span>{% endif %}</td>
+              <td class="text-end cifra-tabular">{{ a.porcentaje_inasistencia | porcentaje }} %<span class="d-block texto-secundario">{{ a.horas_ausentes }} de {{ a.horas_totales }} h</span></td>
+              <td class="text-end cifra-tabular">{{ (a.porcentaje_ritmo | porcentaje) ~ " %" if a.porcentaje_ritmo is not none else "" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% with filtros = parametros %}{% include "estructura/_paginacion.html" %}{% endwith %}
+  {% else %}
+    <div class="estado-vacio">
+      <h2>No hay alertas con estos filtros</h2>
+      <p>{% if resumen.roja + resumen.amarilla == 0 %}Ningún curso ha enviado el registro de este corte, o todos sus estudiantes están en verde.{% else %}Quite algún filtro para ver más estudiantes.{% endif %}</p>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
