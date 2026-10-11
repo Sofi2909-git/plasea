@@ -1,0 +1,16 @@
+{# Mensajes de la aplicación. Categorías: exito, info, aviso, error. #}
+{% set ICONOS = {"exito": "✓", "info": "i", "aviso": "!", "error": "×"} %}
+
+{% macro mensaje(texto, categoria="info") -%}
+  {% set categoria = categoria if categoria in ICONOS else "info" %}
+  <div class="mensaje mensaje-{{ categoria }}" role="{{ 'alert' if categoria in ('error', 'aviso') else 'status' }}">
+    <span class="mensaje-icono" aria-hidden="true">{{ ICONOS[categoria] }}</span>
+    <div>{{ texto }}</div>
+  </div>
+{%- endmacro %}
+
+{% macro mensajes_flash() -%}
+  {% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% for categoria, texto in mensajes %}{{ mensaje(texto, categoria) }}{% endfor %}
+  {% endwith %}
+{%- endmacro %}

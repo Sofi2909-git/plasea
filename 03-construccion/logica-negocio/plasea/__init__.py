@@ -18,6 +18,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
+from plasea import autorizacion, web_comun
 from plasea.configuracion import cargar_configuracion
 from plasea.modelos import db
 from plasea.rutas import (
@@ -85,14 +86,31 @@ def crear_app(configuracion_extra: Optional[dict[str, Any]] = None) -> Flask:
     if configuracion_extra:
         app.config.update(configuracion_extra)
     _validar_configuracion(app)
+    _configurar_registro()
 
     db.init_app(app)
     migrate.init_app(app, db, directory=str(RUTA_MIGRACIONES))
     csrf.init_app(app)
 
+    autorizacion.registrar(app)
+    web_comun.registrar(app)
     _registrar_blueprints(app)
     _registrar_comandos(app)
     return app
+
+
+def _configurar_registro() -> None:
+    """Muestra en consola los mensajes INFO de PLASEA (por ejemplo, los correos)."""
+    # Responsable: Sofi Celmar Galvis (base común)
+    # RF-06 / RF-08
+    registro_plasea = logging.getLogger("plasea")
+    if not registro_plasea.handlers:
+        manejador = logging.StreamHandler()
+        manejador.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
+        )
+        registro_plasea.addHandler(manejador)
+    registro_plasea.setLevel(logging.INFO)
 
 
 def _validar_configuracion(app: Flask) -> None:

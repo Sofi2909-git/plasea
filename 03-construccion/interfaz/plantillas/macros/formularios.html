@@ -1,0 +1,26 @@
+{# Campos de formulario accesibles: etiqueta, ayuda y errores asociados al control. #}
+{% macro campo(campo, ayuda=None, contrasena=False) -%}
+  {% set id_ayuda = campo.id ~ "-ayuda" %}
+  {% set id_error = campo.id ~ "-error" %}
+  {% set describe = (((id_ayuda ~ " ") if ayuda else "") ~ (id_error if campo.errors else "")) | trim %}
+  {% set clases = ("form-select" if campo.type == "SelectField" else "form-control") ~ (" is-invalid" if campo.errors else "") %}
+  {% set atributos = {"class_": clases} %}
+  {% if describe %}{% set _ = atributos.update({"aria-describedby": describe}) %}{% endif %}
+  {% if campo.errors %}{% set _ = atributos.update({"aria-invalid": "true"}) %}{% endif %}
+  <div class="mb-3">
+    {{ campo.label(class_="form-label") }}
+    {% if contrasena %}
+      <div class="campo-contrasena">
+        {{ campo(**atributos) }}
+        <button type="button" class="btn btn-alternar" data-alternar-contrasena="{{ campo.id }}"
+                aria-pressed="false" aria-label="Mostrar u ocultar la contraseña" hidden>Mostrar</button>
+      </div>
+    {% else %}
+      {{ campo(**atributos) }}
+    {% endif %}
+    {% if ayuda %}<div id="{{ id_ayuda }}" class="form-text">{{ ayuda }}</div>{% endif %}
+    {% if campo.errors %}
+      <div id="{{ id_error }}" class="invalid-feedback d-block">{{ campo.errors | join(" ") }}</div>
+    {% endif %}
+  </div>
+{%- endmacro %}

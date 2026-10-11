@@ -1,0 +1,39 @@
+{% extends "app.html" %}
+{% from "macros/formularios.html" import campo %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('acceso_cuentas.lista_cuentas') }}">Cuentas de usuario</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ titulo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ titulo }}</h1>
+    {% if usuario %}
+      <p>Un cambio de rol aplica desde el siguiente inicio de sesión de la persona.</p>
+    {% else %}
+      <p>La cuenta queda pendiente de activación. La persona recibirá un enlace para definir su contraseña.</p>
+    {% endif %}
+  </div>
+</div>
+<div class="row">
+  <div class="col-lg-7 col-xl-6">
+    <section class="tarjeta tarjeta-cuerpo">
+      {% if error %}{{ mensaje(error, "error") }}{% endif %}
+      <form method="post" novalidate data-un-envio>
+        {{ formulario.hidden_tag() }}
+        {{ campo(formulario.nombre_completo) }}
+        {{ campo(formulario.correo, ayuda="Debe ser único. No distingue mayúsculas.") }}
+        {{ campo(formulario.rol) }}
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button type="submit" class="btn btn-primary">{{ "Guardar cambios" if usuario else "Crear cuenta y enviar enlace" }}</button>
+          <a class="btn btn-outline-primary" href="{{ url_for('acceso_cuentas.lista_cuentas') }}">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

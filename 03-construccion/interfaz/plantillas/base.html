@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block titulo %}PLASEA{% endblock %} · PLASEA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='librerias/bootstrap-5.3.8/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/plasea.css') }}">
+</head>
+<body class="{% block clase_cuerpo %}{% endblock %}">
+  <a class="visually-hidden-focusable saltar-contenido" href="#contenido">Saltar al contenido</a>
+  {% block cuerpo %}{% endblock %}
+  <script src="{{ url_for('static', filename='librerias/bootstrap-5.3.8/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/plasea.js') }}"></script>
+</body>
+</html>

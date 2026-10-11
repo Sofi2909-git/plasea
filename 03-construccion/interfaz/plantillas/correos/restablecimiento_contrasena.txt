@@ -1,0 +1,12 @@
+Hola, {{ nombre }}:
+
+Recibimos una solicitud para restablecer la contraseña de su cuenta en PLASEA.
+
+Para definir una contraseña nueva, abra este enlace:
+{{ enlace }}
+
+El enlace es de un solo uso y vence en {{ minutos }} minutos. Al cambiar la contraseña se cerrarán sus sesiones abiertas.
+
+Si usted no hizo esta solicitud, ignore este correo: su contraseña actual sigue funcionando.
+
+PLASEA - Facultad de Ingeniería de Sistemas

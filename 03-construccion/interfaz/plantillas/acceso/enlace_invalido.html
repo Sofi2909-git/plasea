@@ -1,0 +1,12 @@
+{% extends "publica.html" %}
+{% from "macros/mensajes.html" import mensaje %}
+{% block titulo %}Enlace no válido{% endblock %}
+{% block contenido %}
+<h2 class="mb-3">Enlace no válido</h2>
+{{ mensaje(mensaje, "aviso") }}
+<p>Si necesita definir una contraseña nueva, solicite otro enlace. Si su cuenta aún no está activa, pida al administrador del sistema que le reenvíe el enlace de activación.</p>
+<div class="d-grid gap-2">
+  <a class="btn btn-primary" href="{{ url_for('acceso_cuentas.recuperar_contrasena') }}">Solicitar otro enlace</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('acceso_cuentas.iniciar_sesion') }}">Ir a iniciar sesión</a>
+</div>
+{% endblock %}
