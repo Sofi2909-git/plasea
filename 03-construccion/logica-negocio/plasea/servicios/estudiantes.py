@@ -390,3 +390,13 @@ def historial_estados(estudiante_id: int) -> list[HistorialEstadoEstudiante]:
             )
         )
     )
+
+
+def subconsulta_estado_vigente(fecha: dt.date):
+    """Estado vigente de cada estudiante en ``fecha`` (uso desde otros módulos).
+
+    La usa la continuidad (RF-49) para excluir graduados y aplazados.
+    """
+    # Responsable: Yeferson Fabián Jaimes
+    # RF-22
+    return _subconsulta_estado_vigente(fecha)

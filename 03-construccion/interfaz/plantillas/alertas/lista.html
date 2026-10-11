@@ -67,6 +67,7 @@
     </div>
     <div class="acciones-filtro">
       <button type="submit" class="btn btn-primary">Filtrar</button>
+      <a class="btn btn-outline-primary" href="{{ url_for('exportacion.alertas_csv', **parametros) }}">Exportar CSV</a>
       {% if parametros | length > 2 %}<a class="btn btn-outline-primary" href="{{ url_for('alertas_analitica.lista', periodo=periodo.id, corte=corte.numero) }}">Limpiar</a>{% endif %}
     </div>
   </div>
@@ -109,7 +110,7 @@
                 <span class="motivo-alerta">{{ motivos[motivo] }}</span>
               </td>
               <td>
-                <span class="fw-semibold">{{ e.nombres }}</span>
+                <a class="fw-semibold" href="{{ url_for('alertas_analitica.lista_detalle', inscripcion_id=a.inscripcion_id, corte=corte.numero) }}">{{ e.nombres }}</a>
                 {% if e.id in en_riesgo %}<span class="insignia insignia-riesgo">Riesgo alto</span>{% endif %}
                 <span class="d-block texto-secundario cifra-tabular">{{ e.codigo }} · <a href="mailto:{{ e.correo }}">{{ e.correo }}</a></span>
               </td>

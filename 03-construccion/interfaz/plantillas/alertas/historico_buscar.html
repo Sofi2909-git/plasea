@@ -1,0 +1,30 @@
+{% extends "app.html" %}
+{% block titulo %}Histórico de estudiante{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Histórico de estudiante</h1>
+    <p>Asignaturas, notas por corte, inasistencia y resultado de cada semestre.</p>
+  </div>
+</div>
+<section class="tarjeta">
+  <form method="get" class="tarjeta-cuerpo barra-filtros" role="search" aria-label="Buscar estudiante">
+    <div>
+      <label class="form-label" for="q">Código o nombre (mínimo 3 caracteres)</label>
+      <input class="form-control" type="search" id="q" name="q" value="{{ texto }}" minlength="3" maxlength="150" autofocus>
+    </div>
+    <div class="acciones-filtro"><button type="submit" class="btn btn-primary">Buscar</button></div>
+  </form>
+  {% if texto %}
+    {% if encontrados %}
+      <ul class="lista-resultados">
+        {% for e in encontrados %}
+          <li><a href="{{ url_for('alertas_analitica.historico', estudiante_id=e.id) }}"><span class="fw-semibold">{{ e.nombres }}</span><span class="texto-secundario cifra-tabular">{{ e.codigo }} · cohorte {{ e.periodo_ingreso }}</span></a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="estado-vacio"><h2>No se encontraron estudiantes</h2><p>Revise el código o escriba al menos 3 letras del nombre.</p></div>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

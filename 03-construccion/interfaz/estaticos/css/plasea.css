@@ -1697,3 +1697,386 @@ body {
 .tabla-alertas td.text-end {
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   E6 - Detalle de alerta, histórico y resultados (RF-45 a RF-48)
+   ========================================================================== */
+.detalle-alerta-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-3);
+}
+
+.semaforo-grande {
+  font-size: 1rem;
+  padding: 0.25rem 0.875rem 0.25rem 0.5rem;
+}
+
+.semaforo-verde {
+  color: var(--plasea-exito-texto);
+  background: var(--plasea-exito-fondo);
+}
+
+.selector-cortes .desactivado {
+  padding: 0.375rem 0.875rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--plasea-neutro-texto);
+  opacity: 0.6;
+}
+
+.fila-seleccionada td {
+  background: var(--plasea-verde-suave);
+}
+
+.cifras-detalle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--plasea-espacio-3);
+}
+
+.cifras-detalle dt {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--plasea-texto-secundario);
+}
+
+.cifras-detalle dd {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.cifras-detalle dd + dd {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.medidor {
+  position: relative;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--plasea-neutro-fondo);
+}
+
+.medidor-barra {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--plasea-verde);
+}
+
+.medidor-marca {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 2px;
+  background: var(--plasea-aviso-texto);
+}
+
+.medidor-marca-roja {
+  background: var(--plasea-error-texto);
+}
+
+.lista-resultados {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--plasea-borde);
+}
+
+.lista-resultados a {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem var(--plasea-espacio-4);
+  border-bottom: 1px solid var(--plasea-borde);
+  color: var(--plasea-texto);
+  text-decoration: none;
+}
+
+.lista-resultados a:hover {
+  background: #f3f8ec;
+}
+
+.cabecera-semestre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tabla-historico {
+  min-width: 44rem;
+}
+
+.peso-corte {
+  font-weight: 500;
+  color: var(--plasea-texto-secundario);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.resultado {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.resultado-aprobada {
+  color: var(--plasea-exito-texto);
+}
+
+.resultado-perdida {
+  color: var(--plasea-error-texto);
+}
+
+.resultado-en_curso,
+.resultado-retirada {
+  color: var(--plasea-neutro-texto);
+}
+
+.tabla-resultados {
+  min-width: 48rem;
+}
+
+.fila-total th,
+.fila-total td {
+  background: #f0f6e8;
+  font-weight: 700;
+  border-top: 2px solid var(--plasea-borde-fuerte);
+}
+
+/* --- Historial de cambios (RF-33) --------------------------------------- */
+.tabla-cambios {
+  min-width: 60rem;
+}
+
+.celda-motivo {
+  max-width: 22rem;
+}
+
+/* ==========================================================================
+   E7 - Continuidad (RF-49 a RF-53)
+   ========================================================================== */
+.indice-continuidad {
+  display: grid;
+  gap: var(--plasea-espacio-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 992px) {
+  .indice-continuidad {
+    grid-template-columns: minmax(16rem, 1fr) minmax(0, 2fr);
+    align-items: center;
+  }
+}
+
+.indice-valor {
+  display: block;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--plasea-verde-texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.rejilla-tres {
+  display: grid;
+  gap: var(--plasea-espacio-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rejilla-tres > * {
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  .rejilla-tres {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .rejilla-tres > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.rejilla-tres .tabla-compacta {
+  min-width: 26rem;
+}
+
+.lista-causas {
+  columns: 2 12rem;
+  column-gap: var(--plasea-espacio-5);
+}
+
+.lista-causas li {
+  break-inside: avoid;
+}
+
+.lista-causas {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--plasea-espacio-2);
+}
+
+.lista-causas li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--plasea-borde);
+}
+
+.tabla-no-continuan {
+  min-width: 46rem;
+}
+
+.formulario-causa {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.formulario-causa .form-select {
+  max-width: 11rem;
+}
+
+/* ==========================================================================
+   E10 - Vista imprimible del histórico (RF-60): A4 o Carta, sin menús
+   ========================================================================== */
+.pagina-impresion {
+  background: #eef1ee;
+}
+
+.barra-impresion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--plasea-espacio-3);
+  padding: 0.75rem;
+  background: var(--plasea-superficie);
+  border-bottom: 1px solid var(--plasea-borde);
+  font-size: 0.875rem;
+}
+
+.hoja-impresion {
+  max-width: 190mm;
+  margin: var(--plasea-espacio-4) auto;
+  padding: 14mm 12mm;
+  background: var(--plasea-blanco);
+  box-shadow: var(--plasea-sombra);
+  font-size: 10pt;
+}
+
+.encabezado-impresion {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--plasea-verde);
+}
+
+.encabezado-impresion h1 {
+  font-size: 16pt;
+  font-weight: 700;
+  margin: 0;
+}
+
+.datos-impresion {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.datos-impresion dt {
+  font-size: 8pt;
+  color: var(--plasea-texto-secundario);
+  font-weight: 600;
+}
+
+.datos-impresion dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.semestre-impresion {
+  break-inside: avoid;
+  margin-bottom: 0.75rem;
+}
+
+.semestre-impresion h2 {
+  font-size: 11pt;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.semestre-impresion h2 span {
+  font-weight: 500;
+  color: var(--plasea-texto-secundario);
+  font-size: 9pt;
+}
+
+.hoja-impresion .tabla-historico {
+  min-width: 0;
+  width: 100%;
+  font-size: 8.5pt;
+}
+
+.hoja-impresion .tabla-plasea thead th {
+  position: static;
+  font-size: 7.5pt;
+}
+
+.hoja-impresion .tabla-plasea td,
+.hoja-impresion .tabla-plasea th {
+  padding: 0.2rem 0.35rem;
+}
+
+.pie-impresion {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--plasea-borde);
+  font-size: 8pt;
+  color: var(--plasea-texto-secundario);
+}
+
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  .no-imprimir {
+    display: none !important;
+  }
+
+  .pagina-impresion {
+    background: var(--plasea-blanco);
+  }
+
+  .hoja-impresion {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .hoja-impresion a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+.acciones-filtro {
+  flex-wrap: wrap;
+}
+
+.acciones-filtro .btn {
+  white-space: nowrap;
+}

@@ -1,0 +1,17 @@
+{# Indicadores por grupo (RF-51). Requiere: grupos, titulo_columna. #}
+<table class="table tabla-plasea tabla-compacta mb-0">
+  <caption class="visually-hidden">No continuidad por {{ titulo_columna | lower }}</caption>
+  <thead><tr><th scope="col">{{ titulo_columna }}</th><th scope="col" class="text-end">Inscritos</th><th scope="col" class="text-end">Grad. / aplaz.</th><th scope="col" class="text-end">No continúan</th><th scope="col" class="text-end">Índice</th></tr></thead>
+  <tbody>
+    {% for g in grupos %}
+      <tr>
+        <td class="cifra-tabular">{{ g.etiqueta }}</td>
+        <td class="text-end cifra-tabular">{{ g.inscritos }}</td>
+        <td class="text-end cifra-tabular">{{ g.graduados + g.aplazados }}</td>
+        <td class="text-end cifra-tabular">{{ g.no_continuan }}</td>
+        <td class="text-end cifra-tabular fw-semibold">{{ (g.indice | decimal(1)) ~ " %" if g.indice is not none else "" }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot><tr class="fila-total"><th scope="row">Total</th><td class="text-end cifra-tabular">{{ total.inscritos }}</td><td class="text-end cifra-tabular">{{ total.graduados + total.aplazados }}</td><td class="text-end cifra-tabular">{{ total.no_continuan }}</td><td class="text-end cifra-tabular fw-semibold">{{ (total.indice | decimal(1)) ~ " %" if total.indice is not none else "" }}</td></tr></tfoot>
+</table>

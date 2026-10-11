@@ -35,6 +35,14 @@ EVENTOS = (
     "cierre_corte",
     "reapertura",
     "cierre_reapertura",
+    "exportacion",
+)
+CAUSAS = (
+    ("economica", "Económica"),
+    ("academica", "Académica"),
+    ("personal", "Personal"),
+    ("laboral", "Laboral"),
+    ("otra", "Otra"),
 )
 ESTADOS_ESTUDIANTE = (
     ("activo", "Activo"),
@@ -59,6 +67,7 @@ def app() -> Iterator[Any]:
 
     from plasea import crear_app
     from plasea.modelos import (
+        CausaNoContinuidad,
         EstadoEstudiante,
         ProgramaAcademico,
         Rol,
@@ -84,6 +93,7 @@ def app() -> Iterator[Any]:
             EstadoEstudiante(codigo=c, nombre=n) for c, n in ESTADOS_ESTUDIANTE
         )
         db.session.add(ProgramaAcademico(nombre=PROGRAMA))
+        db.session.add_all(CausaNoContinuidad(codigo=c, nombre=n) for c, n in CAUSAS)
         db.session.commit()
     yield aplicacion
 
@@ -106,6 +116,7 @@ def limpiar_datos(request: pytest.FixtureRequest) -> Iterator[None]:
         m.SesionUsuario,
         m.TokenCuenta,
         m.Alerta,
+        m.RegistroCausaNoContinuidad,
         m.HistorialAusencia,
         m.HistorialNota,
         m.ReaperturaCurso,

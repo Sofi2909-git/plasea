@@ -32,6 +32,7 @@ class OpcionMenu:
     ``blueprints`` marca la opción como activa en cualquier pantalla de esos
     blueprints. ``en_inicio`` la muestra como tarjeta en la página de inicio.
     ``grupo`` agrupa opciones bajo un menú desplegable (por ejemplo "Ayuda").
+    ``etiqueta_corta`` es el texto de la barra cuando el nombre completo no cabe.
     """
 
     etiqueta: str
@@ -41,6 +42,7 @@ class OpcionMenu:
     blueprints: tuple[str, ...] = ()
     en_inicio: bool = True
     grupo: str = ""
+    etiqueta_corta: str = ""
 
 
 MENU: tuple[OpcionMenu, ...] = (
@@ -66,6 +68,7 @@ MENU: tuple[OpcionMenu, ...] = (
         "Períodos, cortes, festivos, asignaturas, cursos con horario y umbrales de "
         "alerta.",
         blueprints=("estructura_academica",),
+        etiqueta_corta="Estructura",
     ),
     OpcionMenu(
         "Estudiantes",
@@ -81,6 +84,7 @@ MENU: tuple[OpcionMenu, ...] = (
         (ROL_AUDITOR,),
         "Cursos enviados y pendientes por corte, cierre del corte y reaperturas.",
         blueprints=("cierre_cortes",),
+        etiqueta_corta="Cortes",
     ),
     OpcionMenu(
         "Alertas",
@@ -88,7 +92,35 @@ MENU: tuple[OpcionMenu, ...] = (
         (ROL_AUDITOR,),
         "Estudiantes en alerta amarilla o roja por corte, con su motivo y riesgo "
         "alto.",
-        blueprints=("alertas_analitica",),
+    ),
+    OpcionMenu(
+        "Resultados por curso",
+        "alertas_analitica.resultados",
+        (ROL_AUDITOR,),
+        "Inscritos, aprobados, en alerta y perdidos por asignatura, curso y corte.",
+        grupo="Análisis",
+    ),
+    OpcionMenu(
+        "Continuidad",
+        "continuidad_desercion.panel",
+        (ROL_AUDITOR,),
+        "Índice de no continuidad por período, cohorte, semestre y causa.",
+        blueprints=("continuidad_desercion",),
+        grupo="Análisis",
+    ),
+    OpcionMenu(
+        "Histórico de estudiante",
+        "alertas_analitica.historico_buscar",
+        (ROL_AUDITOR,),
+        "Asignaturas, notas, inasistencia y resultado de cada semestre.",
+        grupo="Análisis",
+    ),
+    OpcionMenu(
+        "Historial de cambios",
+        "registro_asistencia_notas.historial",
+        (ROL_AUDITOR,),
+        "Correcciones de notas y asistencia con motivo, usuario y fecha.",
+        grupo="Análisis",
     ),
     OpcionMenu(
         "Acerca de PLASEA",
@@ -194,7 +226,8 @@ def opciones_menu() -> list[dict[str, Any]]:
     """Devuelve las opciones del menú permitidas para el rol de la sesión (RF-02)."""
     # Responsable: Islender Arturo Alfonso
     # RF-02 (opciones de E2, E3 y E12: Yeferson Fabián Jaimes, RF-13 a RF-23,
-    # RF-62 y RF-63; opciones de E5 y E6: Islender Arturo Alfonso, RF-35, RF-44)
+    # RF-62 y RF-63; opciones de E5 y E6: Islender Arturo Alfonso, RF-35, RF-44;
+    # opciones de análisis: Wilson D'Alessandro Saavedra Rolón, RF-33, RF-47 a RF-49)
     rol = g.get("rol_codigo")
     if rol is None:
         return []
@@ -206,6 +239,7 @@ def opciones_menu() -> list[dict[str, Any]]:
             "descripcion": opcion.descripcion,
             "en_inicio": opcion.en_inicio,
             "grupo": opcion.grupo,
+            "etiqueta_barra": opcion.etiqueta_corta or opcion.etiqueta,
             "activa": endpoint_actual == opcion.endpoint
             or endpoint_actual.startswith(opcion.endpoint + "_")
             or request.blueprint in opcion.blueprints,

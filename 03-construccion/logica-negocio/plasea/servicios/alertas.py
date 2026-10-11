@@ -322,6 +322,34 @@ def listar_alertas(
     # Responsable: Islender Arturo Alfonso
     # RF-44
     riesgo = subconsulta_riesgo_alto(corte.id)
+    paginacion = db.paginate(
+        consulta_alertas(corte, filtros),
+        page=max(pagina, 1),
+        per_page=ALERTAS_POR_PAGINA,
+        error_out=False,
+    )
+    ids = {a.inscripcion.matricula_periodo.estudiante_id for a in paginacion.items}
+    en_riesgo = (
+        set(
+            db.session.scalars(
+                riesgo.where(MatriculaPeriodo.estudiante_id.in_(ids or {0}))
+            )
+        )
+        if ids
+        else set()
+    )
+    return paginacion, en_riesgo
+
+
+def consulta_alertas(corte: Corte, filtros: FiltrosAlertas):
+    """Consulta filtrada y ordenada por severidad, sin paginar (RF-44).
+
+    La usan la lista paginada (RF-44) y la exportación de todas las filas del
+    filtro (RF-58), así ambas coinciden.
+    """
+    # Responsable: Islender Arturo Alfonso
+    # RF-44
+    riesgo = subconsulta_riesgo_alto(corte.id)
     consulta = (
         select(Alerta)
         .join(Alerta.inscripcion)
@@ -368,20 +396,7 @@ def listar_alertas(
         Estudiante.nombres,
         Alerta.id,
     )
-    paginacion = db.paginate(
-        consulta, page=max(pagina, 1), per_page=ALERTAS_POR_PAGINA, error_out=False
-    )
-    ids = {a.inscripcion.matricula_periodo.estudiante_id for a in paginacion.items}
-    en_riesgo = (
-        set(
-            db.session.scalars(
-                riesgo.where(MatriculaPeriodo.estudiante_id.in_(ids or {0}))
-            )
-        )
-        if ids
-        else set()
-    )
-    return paginacion, en_riesgo
+    return consulta
 
 
 def resumen_corte(corte: Corte) -> dict[str, int]:

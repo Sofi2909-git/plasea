@@ -1,0 +1,32 @@
+{% extends "app.html" %}
+{% block titulo %}Histórico de {{ estudiante.codigo }}{% endblock %}
+{% block contenido %}
+<nav aria-label="Ruta de navegación">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('alertas_analitica.historico_buscar') }}">Histórico de estudiante</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ estudiante.codigo }}</li>
+  </ol>
+</nav>
+<div class="encabezado-pagina">
+  <div>
+    <h1>{{ estudiante.nombres }}</h1>
+    <p>{{ estudiante.codigo }} · {{ estudiante.programa_academico.nombre }} · cohorte {{ estudiante.periodo_ingreso }}</p>
+  </div>
+  <div class="acciones-encabezado">
+    <a class="btn btn-outline-primary" href="{{ url_for('estudiantes_inscripciones.lista_detalle', estudiante_id=estudiante.id) }}">Ficha del estudiante</a>
+    <a class="btn btn-primary" href="{{ url_for('exportacion.historico_imprimible', estudiante_id=estudiante.id) }}" target="_blank" rel="noopener">Vista imprimible</a>
+  </div>
+</div>
+{% if not semestres %}
+  <section class="tarjeta estado-vacio"><h2>Sin semestres registrados</h2><p>El estudiante no tiene matrículas en los períodos de PLASEA.</p></section>
+{% endif %}
+{% for s in semestres %}
+  <section class="tarjeta mb-4" aria-labelledby="sem-{{ s.periodo.id }}">
+    <div class="tarjeta-cuerpo pb-2 cabecera-semestre">
+      <h2 id="sem-{{ s.periodo.id }}" class="titulo-seccion mb-0">{{ s.periodo.identificador }} <span class="texto-secundario fw-normal">· semestre {{ s.semestre_cursado }} de la carrera</span></h2>
+      <p class="texto-secundario mb-0">{{ s.filas | length }} asignatura(s) · {{ s.aprobadas }} aprobada(s) · {{ s.perdidas }} perdida(s)</p>
+    </div>
+    <div class="contenedor-tabla">{% include "alertas/_tabla_historico.html" %}</div>
+  </section>
+{% endfor %}
+{% endblock %}
