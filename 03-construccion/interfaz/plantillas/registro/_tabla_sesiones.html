@@ -1,4 +1,4 @@
-{# Tabla de sesiones de un corte (RF-28). Requiere: filas_grupo, curso, dias. #}
+{# Tabla de sesiones de un corte (RF-28). Requiere: filas_grupo, modo_grupo, curso, dias. #}
 <div class="contenedor-tabla">
   <table class="table tabla-plasea tabla-sesiones">
     <caption class="visually-hidden">Sesiones y estado de su asistencia</caption>
@@ -24,7 +24,11 @@
             {% endif %}
           </td>
           <td class="text-end">
-            {% if fila.dictada and not fila.bloqueo %}
+            {% if fila.registrada and modo_grupo and modo_grupo.permite_correccion %}
+              <a class="btn btn-sm btn-outline-primary"
+                 href="{{ url_for('registro_asistencia_notas.corregir_asistencia', curso_id=curso.id, sesion_id=s.id) }}"
+                 aria-label="Corregir la asistencia del {{ s.fecha | fecha }}">Corregir</a>
+            {% elif fila.dictada and not fila.bloqueo %}
               <a class="btn btn-sm {{ 'btn-outline-primary' if fila.registrada else 'btn-primary' }}"
                  href="{{ url_for('registro_asistencia_notas.asistencia', curso_id=curso.id, sesion_id=s.id) }}"
                  aria-label="{{ 'Editar' if fila.registrada else 'Registrar' }} la asistencia del {{ s.fecha | fecha }}">{{ "Editar" if fila.registrada else "Registrar" }}</a>

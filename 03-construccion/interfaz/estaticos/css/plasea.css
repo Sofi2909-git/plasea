@@ -1457,3 +1457,243 @@ body {
     color: var(--plasea-texto-secundario);
   }
 }
+
+/* ==========================================================================
+   Menú agrupado (Ayuda) en la barra
+   ========================================================================== */
+.menu-grupo {
+  --bs-dropdown-link-active-bg: var(--plasea-verde);
+  --bs-dropdown-link-hover-bg: var(--plasea-verde-suave);
+  --bs-dropdown-link-hover-color: var(--plasea-verde-activo);
+  border-color: var(--plasea-borde);
+  box-shadow: var(--plasea-sombra);
+}
+
+/* ==========================================================================
+   E4 - Envío y correcciones (RF-30 a RF-32)
+   ========================================================================== */
+.aviso-con-accion {
+  align-items: center;
+}
+
+.aviso-con-accion > div {
+  flex: 1;
+}
+
+.panel-envio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-3);
+}
+
+.panel-envio > div {
+  flex: 1 1 22rem;
+}
+
+.tabla-correccion {
+  min-width: 40rem;
+}
+
+.tabla-correccion .campo-motivo {
+  min-width: 14rem;
+}
+
+.campo-motivo.requiere-motivo {
+  border-color: var(--plasea-aviso-texto);
+  background: var(--plasea-aviso-fondo);
+}
+
+/* ==========================================================================
+   E5 - Cierre de cortes (RF-35 a RF-39)
+   ========================================================================== */
+.filtro-casilla {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.375rem;
+  padding-left: 0;
+}
+
+.filtro-casilla .form-check-input {
+  float: none;
+  margin: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--plasea-texto-secundario);
+}
+
+.resumen-corte-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-3);
+}
+
+.nota-cierre {
+  max-width: 28rem;
+  font-size: 0.875rem;
+}
+
+.rejilla-cifras .cifra-aviso .dato-grande {
+  color: var(--plasea-aviso-texto);
+}
+
+.btn-peligro-solido {
+  --bs-btn-color: var(--plasea-blanco);
+  --bs-btn-bg: var(--plasea-error-texto);
+  --bs-btn-border-color: var(--plasea-error-texto);
+  --bs-btn-hover-color: var(--plasea-blanco);
+  --bs-btn-hover-bg: #912018;
+  --bs-btn-hover-border-color: #912018;
+  --bs-btn-active-bg: #7a1a14;
+  --bs-btn-focus-shadow-rgb: 180, 35, 24;
+  white-space: nowrap;
+}
+
+.insignia-registro-pendiente {
+  color: var(--plasea-aviso-texto);
+  background: var(--plasea-aviso-fondo);
+}
+
+.insignia-registro-enviado {
+  color: var(--plasea-info-texto);
+  background: var(--plasea-info-fondo);
+}
+
+.insignia-registro-cerrado {
+  color: var(--plasea-exito-texto);
+  background: var(--plasea-exito-fondo);
+}
+
+.insignia-registro-sin_registro {
+  color: var(--plasea-error-texto);
+  background: var(--plasea-error-fondo);
+}
+
+/* ==========================================================================
+   E6 - Alertas (RF-44). El semáforo siempre lleva texto; el color refuerza.
+   ========================================================================== */
+.filtros-alertas {
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+}
+
+.franja-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(7rem, auto)) minmax(16rem, 1fr);
+  gap: var(--plasea-espacio-3);
+  align-items: stretch;
+  margin-bottom: var(--plasea-espacio-3);
+}
+
+@media (max-width: 991.98px) {
+  .franja-resumen {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .franja-estado {
+    grid-column: 1 / -1;
+  }
+}
+
+.franja-dato {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-superficie);
+  border: 1px solid var(--plasea-borde);
+  font-size: 0.875rem;
+  color: var(--plasea-texto-secundario);
+}
+
+.franja-roja .dato-grande {
+  color: var(--plasea-error-texto);
+}
+
+.franja-amarilla .dato-grande {
+  color: var(--plasea-aviso-texto);
+}
+
+.franja-estado {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+.tabla-alertas {
+  min-width: 62rem;
+}
+
+.semaforo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem 0.125rem 0.375rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.semaforo::before {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 2px var(--plasea-superficie);
+}
+
+.semaforo-roja {
+  color: var(--plasea-error-texto);
+  background: var(--plasea-error-fondo);
+}
+
+.semaforo-amarilla {
+  color: var(--plasea-aviso-texto);
+  background: var(--plasea-aviso-fondo);
+}
+
+.motivo-alerta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+}
+
+.insignia-riesgo {
+  margin-left: 0.375rem;
+  color: var(--plasea-blanco);
+  background: var(--plasea-error-texto);
+  font-size: 0.75rem;
+}
+
+.insignia-riesgo::before {
+  background: var(--plasea-blanco);
+}
+
+.valor-critico,
+.texto-critico {
+  color: var(--plasea-error-texto);
+  font-weight: 700;
+}
+
+.texto-critico {
+  font-size: 0.75rem;
+}
+
+/* Las etiquetas visualmente ocultas (posición absoluta) dentro de una tabla
+   con desplazamiento no deben ensanchar la página. */
+.contenedor-tabla {
+  position: relative;
+}
+
+.tabla-alertas td.text-end {
+  white-space: nowrap;
+}

@@ -31,6 +31,7 @@ class OpcionMenu:
 
     ``blueprints`` marca la opción como activa en cualquier pantalla de esos
     blueprints. ``en_inicio`` la muestra como tarjeta en la página de inicio.
+    ``grupo`` agrupa opciones bajo un menú desplegable (por ejemplo "Ayuda").
     """
 
     etiqueta: str
@@ -39,6 +40,7 @@ class OpcionMenu:
     descripcion: str = ""
     blueprints: tuple[str, ...] = ()
     en_inicio: bool = True
+    grupo: str = ""
 
 
 MENU: tuple[OpcionMenu, ...] = (
@@ -74,16 +76,33 @@ MENU: tuple[OpcionMenu, ...] = (
         blueprints=("estudiantes_inscripciones",),
     ),
     OpcionMenu(
+        "Cierre de cortes",
+        "cierre_cortes.panel",
+        (ROL_AUDITOR,),
+        "Cursos enviados y pendientes por corte, cierre del corte y reaperturas.",
+        blueprints=("cierre_cortes",),
+    ),
+    OpcionMenu(
+        "Alertas",
+        "alertas_analitica.lista",
+        (ROL_AUDITOR,),
+        "Estudiantes en alerta amarilla o roja por corte, con su motivo y riesgo "
+        "alto.",
+        blueprints=("alertas_analitica",),
+    ),
+    OpcionMenu(
         "Acerca de PLASEA",
         "ayuda_informacion.acerca",
         TODOS_LOS_ROLES,
         en_inicio=False,
+        grupo="Ayuda",
     ),
     OpcionMenu(
         "Políticas",
         "ayuda_informacion.politicas",
         TODOS_LOS_ROLES,
         en_inicio=False,
+        grupo="Ayuda",
     ),
 )
 
@@ -175,7 +194,7 @@ def opciones_menu() -> list[dict[str, Any]]:
     """Devuelve las opciones del menú permitidas para el rol de la sesión (RF-02)."""
     # Responsable: Islender Arturo Alfonso
     # RF-02 (opciones de E2, E3 y E12: Yeferson Fabián Jaimes, RF-13 a RF-23,
-    # RF-62 y RF-63)
+    # RF-62 y RF-63; opciones de E5 y E6: Islender Arturo Alfonso, RF-35, RF-44)
     rol = g.get("rol_codigo")
     if rol is None:
         return []
@@ -186,6 +205,7 @@ def opciones_menu() -> list[dict[str, Any]]:
             "url": url_for(opcion.endpoint),
             "descripcion": opcion.descripcion,
             "en_inicio": opcion.en_inicio,
+            "grupo": opcion.grupo,
             "activa": endpoint_actual == opcion.endpoint
             or endpoint_actual.startswith(opcion.endpoint + "_")
             or request.blueprint in opcion.blueprints,
