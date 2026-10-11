@@ -17,7 +17,7 @@ Python + Flask, JavaScript vanilla + Bootstrap, MariaDB con SQLAlchemy.
 [PENDIENTE] Se documentará en el manual técnico (`05-manuales`).
 
 ## Flujo de trabajo
-GitFlow: `main` (entregas), `feature/modx-descripcion`. Fusiones por pull request con revisión. Los commits citan el RF (por ejemplo, `RF-28: registrar asistencia por sesión`).
+GitFlow: `main` (entregas), `feature/modx-descripcion`. Fusiones por pull request con revisión.
 
 ## Equipo
 Sofi Celmar Galvis, Andrés Camilo Anaya García, Yeferson Fabián Jaimes, Islender Arturo Alfonso y Wilson D'Alessandro Saavedra Rolón. Docente: Ing. Nataly Duque Páez.
