@@ -2,8 +2,8 @@
 
 Implementa para el Profesor RF-26 a RF-29 (cursos, inscritos, asistencia y notas
 en borrador) y RF-30 a RF-32 (envío, correcciones con motivo y bloqueo fuera de
-plazo). Para el Auditor académico, el historial de cambios (RF-33). El resumen
-por estudiante (RF-34) pertenece a otro módulo de la misma épica.
+plazo). Para el Auditor académico, el historial de cambios (RF-33). Para el
+Profesor, cómo van sus estudiantes (RF-34).
 """
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ from plasea.servicios import (
     historial_cambios,
     periodos,
     registro_academico,
+    seguimiento_profesor,
 )
 from plasea.servicios.comunes import ErrorNegocio
 from plasea.servicios.cuentas import ROL_AUDITOR, ROL_PROFESOR
@@ -93,6 +94,36 @@ def curso(curso_id: int) -> Any:
         fuera_de_corte=[f for f in sesiones if f.corte_numero is None],
         modos=correcciones.modos_del_curso(curso_actual),
         dias=cursos.DIAS_SEMANA,
+    )
+
+
+@blueprint.get("/cursos/<int:curso_id>/seguimiento")
+@rol_requerido(ROL_PROFESOR)
+def seguimiento(curso_id: int) -> Any:
+    """Nota acumulada, inasistencia y alerta de cada estudiante del curso (RF-34)."""
+    # Responsable: Andrés Camilo Anaya García
+    # RF-34
+    curso_actual = _curso_propio(curso_id)
+    disponibles = seguimiento_profesor.cortes_disponibles(curso_actual)
+    numero = request.args.get("corte", type=int)
+    corte = next(
+        (c for c in disponibles if c.numero == numero), None
+    ) or seguimiento_profesor.corte_por_defecto(curso_actual)
+    try:
+        datos = (
+            seguimiento_profesor.seguimiento_curso(curso_actual, corte)
+            if corte
+            else None
+        )
+    except ErrorNegocio as fallo:
+        flash(fallo.mensaje, "error")
+        datos = None
+    return render_template(
+        "registro/seguimiento.html",
+        curso=curso_actual,
+        disponibles=disponibles,
+        corte=corte,
+        datos=datos,
     )
 
 

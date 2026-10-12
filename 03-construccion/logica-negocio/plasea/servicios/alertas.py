@@ -70,18 +70,20 @@ def fecha_referencia(corte: Corte) -> dt.date:
     return min(ahora().date(), corte.fecha_fin)
 
 
-def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
-    """Calcula y guarda las alertas del corte para los cursos indicados (RF-43).
+def evaluar(
+    corte: Corte, curso_ids: Optional[Iterable[int]] = None
+) -> list[tuple[int, int, dict]]:
+    """Calcula, sin guardar, la alerta de cada inscrito en el corte (RF-40 a RF-43).
 
-    No confirma la transacción: lo hace quien la llama, junto con el evento que
-    origina el cálculo (envío, corrección, cierre o reapertura).
+    Lo usan ``recalcular`` (que guarda) y la vista del profesor de RF-34 (que
+    muestra los valores vigentes aunque el curso aún no se haya enviado).
 
     Args:
         corte: corte que se evalúa.
-        curso_ids: cursos a recalcular; ``None`` = todos los del período.
+        curso_ids: cursos a evaluar; ``None`` = todos los del período.
 
     Returns:
-        Número de alertas calculadas.
+        Tuplas (inscripción, curso, valores de la fila de ``alertas``).
 
     Raises:
         ErrorNegocio: no hay configuración de umbrales (RF-20).
@@ -103,7 +105,7 @@ def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
     if curso_ids is not None:
         curso_ids = list(curso_ids)
         if not curso_ids:
-            return 0
+            return []
         filtro_cursos.append(Curso.id.in_(curso_ids))
     cursos_sub = select(Curso.id).where(*filtro_cursos).scalar_subquery()
 
@@ -117,7 +119,7 @@ def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
         )
     ).all()
     if not inscripciones:
-        return 0
+        return []
 
     notas: dict[tuple[int, int], Decimal] = {}
     for inscripcion_id, corte_id, nota in db.session.execute(
@@ -157,18 +159,9 @@ def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
             .group_by(Ausencia.inscripcion_id)
         )
     }
-    existentes = {
-        alerta.inscripcion_id: alerta
-        for alerta in db.session.scalars(
-            select(Alerta)
-            .join(Inscripcion, Inscripcion.id == Alerta.inscripcion_id)
-            .where(Alerta.corte_id == corte.id, Inscripcion.curso_id.in_(cursos_sub))
-        )
-    }
-
     definitiva = corte.cerrado_en is not None
     momento = ahora()
-    nuevas: list[dict] = []
+    filas: list[tuple[int, int, dict]] = []
     for inscripcion_id, curso_id in inscripciones:
         resultado = calculos.evaluar_alerta(
             configuracion,
@@ -209,6 +202,44 @@ def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
             "definitiva": definitiva,
             "calculada_en": momento,
         }
+        filas.append((inscripcion_id, curso_id, valores))
+    return filas
+
+
+def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
+    """Calcula y guarda las alertas del corte para los cursos indicados (RF-43).
+
+    No confirma la transacción: lo hace quien la llama, junto con el evento que
+    origina el cálculo (envío, corrección, cierre o reapertura).
+
+    Args:
+        corte: corte que se evalúa.
+        curso_ids: cursos a recalcular; ``None`` = todos los del período.
+
+    Returns:
+        Número de alertas calculadas.
+
+    Raises:
+        ErrorNegocio: no hay configuración de umbrales (RF-20).
+    """
+    # Responsable: Islender Arturo Alfonso
+    # RF-43
+    filas = evaluar(corte, curso_ids)
+    if not filas:
+        return 0
+    existentes = {
+        alerta.inscripcion_id: alerta
+        for alerta in db.session.scalars(
+            select(Alerta)
+            .join(Inscripcion, Inscripcion.id == Alerta.inscripcion_id)
+            .where(
+                Alerta.corte_id == corte.id,
+                Inscripcion.curso_id.in_({curso_id for _, curso_id, _ in filas}),
+            )
+        )
+    }
+    nuevas: list[dict] = []
+    for inscripcion_id, _, valores in filas:
         existente = existentes.get(inscripcion_id)
         if existente is None:
             nuevas.append(
@@ -220,7 +251,7 @@ def recalcular(corte: Corte, curso_ids: Optional[Iterable[int]] = None) -> int:
     if nuevas:
         db.session.execute(insert(Alerta), nuevas)
     db.session.flush()
-    return len(inscripciones)
+    return len(filas)
 
 
 def recalcular_curso(curso_id: int, desde_numero: int) -> None:

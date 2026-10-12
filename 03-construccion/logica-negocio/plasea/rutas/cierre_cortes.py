@@ -9,7 +9,8 @@ El cierre automático (RF-37) corre de dos formas, ambas idempotentes:
    aunque el computador haya estado apagado) y al arrancar el planificador.
 2. Con un planificador interno (APScheduler) que revisa a diario a las 00:10.
 
-Además existe el comando ``flask cerrar-cortes-vencidos``.
+Además existe el comando ``flask cerrar-cortes-vencidos``. Tras cada cierre se
+envía el correo de resumen pendiente (RF-57), una sola vez por corte.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ from flask import (
 from plasea.autorizacion import rol_requerido
 from plasea.formularios.cierre_cortes import FormularioAccion, FormularioReapertura
 from plasea.modelos import Corte, PeriodoAcademico, db
-from plasea.servicios import cierre_cortes, periodos
+from plasea.servicios import cierre_cortes, notificaciones, periodos
 from plasea.servicios.comunes import ErrorNegocio, ahora
 from plasea.servicios.cuentas import ROL_AUDITOR
 
@@ -66,7 +67,22 @@ def _ejecutar_cierre_automatico(app: Flask) -> list[str]:
             registro_log.info(
                 "Cortes cerrados automáticamente: %s", ", ".join(cerrados)
             )
+        _enviar_resumenes()
         return cerrados
+
+
+def _enviar_resumenes() -> None:
+    """Envía los correos de resumen de cortes cerrados pendientes (RF-57)."""
+    # Responsable: Andrés Camilo Anaya García
+    # RF-57
+    try:
+        enviados = notificaciones.enviar_resumenes_pendientes()
+    except Exception:
+        db.session.rollback()
+        registro_log.exception("Falló el envío de resúmenes de cierre (RF-57)")
+        return
+    if enviados:
+        registro_log.info("Resumen de cierre enviado: %s", ", ".join(enviados))
 
 
 def _iniciar_planificador(app: Flask) -> None:
@@ -123,6 +139,7 @@ def comando_cerrar_vencidos() -> None:
         if cerrados
         else "No hay cortes vencidos."
     )
+    _enviar_resumenes()
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +222,7 @@ def cerrar(corte_id: int) -> Any:
             f"{resultado['sin_registro']} sin registro. Las alertas son definitivas.",
             "exito",
         )
+        _enviar_resumenes()
     return _volver(db.session.get(Corte, corte_id))
 
 

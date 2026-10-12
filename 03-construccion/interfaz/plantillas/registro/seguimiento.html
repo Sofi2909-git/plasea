@@ -1,0 +1,90 @@
+{% extends "app.html" %}
+{% block titulo %}Cómo van mis estudiantes · {{ curso.asignatura.codigo }} {{ curso.codigo }}{% endblock %}
+{% block contenido %}
+{% set miga = "Cómo van mis estudiantes" %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Cómo van mis estudiantes</h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · período {{ curso.periodo_academico.identificador }}. Primero quienes están en rojo, luego en amarillo.</p>
+  </div>
+  {% if disponibles %}
+  <nav class="selector-cortes" aria-label="Elegir corte">
+    {% for c in curso.periodo_academico.cortes | sort(attribute="numero") %}
+      {% if c in disponibles %}
+        <a href="{{ url_for('registro_asistencia_notas.seguimiento', curso_id=curso.id, corte=c.numero) }}" class="{{ 'activo' if corte and c.id == corte.id }}" {% if corte and c.id == corte.id %}aria-current="page"{% endif %}>Corte {{ c.numero }}</a>
+      {% else %}
+        <span class="desactivado" aria-disabled="true" title="Inicia el {{ c.fecha_inicio | fecha }}">Corte {{ c.numero }}</span>
+      {% endif %}
+    {% endfor %}
+  </nav>
+  {% endif %}
+</div>
+
+{% if not datos %}
+  <section class="tarjeta estado-vacio">
+    <h2>Todavía no hay información para mostrar</h2>
+    <p>Los valores aparecen cuando inicia el primer corte del período.</p>
+  </section>
+{% else %}
+<div class="franja-resumen" role="group" aria-label="Resumen del curso en el corte {{ corte.numero }}">
+  <div class="franja-dato franja-roja"><span class="dato-grande">{{ datos.total("roja") }}</span><span>en rojo</span></div>
+  <div class="franja-dato franja-amarilla"><span class="dato-grande">{{ datos.total("amarilla") }}</span><span>en amarillo</span></div>
+  <div class="franja-dato franja-verde"><span class="dato-grande">{{ datos.total("verde") }}</span><span>en verde</span></div>
+  <div class="franja-estado">
+    <span class="insignia {{ 'insignia-corte-cerrado' if datos.definitivo else 'insignia-info' }}">{{ "Definitivo" if datos.definitivo else "Provisional" }}</span>
+    <span class="texto-secundario">{{ "Corte cerrado el " ~ (corte.cerrado_en | fecha_hora) if datos.definitivo else "Calculado ahora con las notas y la asistencia registradas hasta hoy." }}</span>
+  </div>
+</div>
+
+<section class="tarjeta" aria-labelledby="titulo-seguimiento">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-seguimiento" class="titulo-seccion mb-0">Corte {{ corte.numero }} · {{ datos.filas | length }} estudiante(s)</h2>
+    <p class="texto-secundario mb-0">Acumulada: suma de cada nota por el peso de su corte. Inasistencia: horas ausentes sobre las horas totales del curso; ritmo: sobre las horas dictadas a la fecha.</p>
+  </div>
+  {% if datos.filas %}
+    <div class="contenedor-tabla">
+      <table class="table tabla-plasea tabla-seguimiento">
+        <caption class="visually-hidden">Nota acumulada, inasistencia y estado de alerta de cada estudiante</caption>
+        <thead>
+          <tr>
+            <th scope="col">Estado</th>
+            <th scope="col">Estudiante</th>
+            {% for c in datos.cortes_mostrados %}<th scope="col" class="text-end">Corte {{ c.numero }} <span class="peso-corte">{{ c.peso_porcentaje | porcentaje }} %</span></th>{% endfor %}
+            <th scope="col" class="text-end">Acumulada</th>
+            <th scope="col" class="text-end">Inasistencia</th>
+            <th scope="col" class="text-end">Ritmo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in datos.filas %}
+            <tr>
+              <td>
+                <span class="semaforo semaforo-{{ f.estado }}">{{ f.nombre_estado }}</span>
+                {% if f.nombre_motivo %}<span class="motivo-alerta">{{ f.nombre_motivo }}</span>{% endif %}
+              </td>
+              <td><span class="fw-semibold">{{ f.nombres }}</span><span class="d-block texto-secundario cifra-tabular">{{ f.codigo }}</span></td>
+              {% for nota in f.notas %}
+                <td class="text-end cifra-tabular">{% if nota is not none %}{{ nota | decimal }}{% else %}<span class="texto-secundario">Sin nota</span>{% endif %}</td>
+              {% endfor %}
+              <td class="text-end cifra-tabular fw-semibold">
+                {{ f.nota_acumulada | decimal(2) if f.nota_acumulada is not none else "" }}
+                {% if f.nota_requerida is not none and f.nota_requerida > 5 %}<span class="d-block texto-critico">Ya no alcanza 3,0</span>
+                {% elif f.nota_requerida is not none and f.nota_requerida > 1 %}<span class="d-block texto-secundario small">Necesita {{ f.nota_requerida | decimal(2) }}</span>
+                {% elif f.nota_requerida is not none %}<span class="d-block texto-secundario small">Ya asegura 3,0</span>{% endif %}
+              </td>
+              <td class="text-end cifra-tabular {{ 'valor-critico' if f.motivo_inasistencia and f.estado == 'roja' }}">{{ (f.porcentaje_inasistencia | decimal(1)) ~ " %" if f.porcentaje_inasistencia is not none else "" }}<span class="d-block texto-secundario small">{{ f.horas_ausentes }} h</span></td>
+              <td class="text-end cifra-tabular">{{ (f.porcentaje_ritmo | decimal(1)) ~ " %" if f.porcentaje_ritmo is not none else "—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>El curso no tiene estudiantes inscritos</h2>
+      <p>El Auditor académico inscribe a los estudiantes en el curso.</p>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

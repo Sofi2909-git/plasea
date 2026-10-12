@@ -8,6 +8,7 @@
     <p>{{ curso.asignatura.codigo }} · período {{ curso.periodo_academico.identificador }} ·
       {% for bloque in curso.bloques_horario %}{{ dias[bloque.dia_semana] }} {{ bloque.hora_inicio | hora }}–{{ bloque.hora_fin | hora }}{% if not loop.last %}, {% endif %}{% else %}sin horario{% endfor %}</p>
   </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('registro_asistencia_notas.seguimiento', curso_id=curso.id) }}">Cómo van mis estudiantes</a>
 </div>
 
 <section class="tarjeta tarjeta-cuerpo mb-4" aria-labelledby="titulo-cortes">
