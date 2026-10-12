@@ -94,6 +94,15 @@ MENU: tuple[OpcionMenu, ...] = (
         "alto.",
     ),
     OpcionMenu(
+        "Tablero de gráficos",
+        "graficos_tablero.tablero",
+        (ROL_AUDITOR,),
+        "Semáforo de alertas por corte, inscritos que continúan y no continuidad "
+        "por semestre.",
+        blueprints=("graficos_tablero",),
+        grupo="Análisis",
+    ),
+    OpcionMenu(
         "Resultados por curso",
         "alertas_analitica.resultados",
         (ROL_AUDITOR,),

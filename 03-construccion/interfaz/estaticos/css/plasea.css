@@ -2080,3 +2080,269 @@ body {
 .acciones-filtro .btn {
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   E4 - Cómo van mis estudiantes (RF-34)
+   ========================================================================== */
+.franja-verde .dato-grande {
+  color: var(--plasea-exito-texto);
+}
+
+.tabla-seguimiento {
+  min-width: 52rem;
+}
+
+.tabla-seguimiento td.text-end {
+  white-space: nowrap;
+}
+
+.peso-corte {
+  display: block;
+  font-weight: 500;
+  color: var(--plasea-texto-secundario);
+}
+
+/* ==========================================================================
+   E8 - Gráficos del tablero (RF-54 a RF-56)
+   Barras en HTML y CSS; los anchos llegan en data-ancho (js/graficos.js).
+   Rellenos con 3:1 o más sobre blanco (WCAG 1.4.11); cada barra lleva su cifra.
+   ========================================================================== */
+:root {
+  --grafico-roja: #d92d20;
+  --grafico-amarilla: #c27c00;
+  --grafico-verde: #3f9d62;
+  --grafico-inscritos: #669846;
+  --grafico-continuan: var(--plasea-verde-activo);
+  --grafico-no-continua: var(--plasea-verde);
+  --grafico-pista: var(--plasea-neutro-fondo);
+}
+
+.grafico-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--plasea-espacio-3);
+  margin-bottom: var(--plasea-espacio-3);
+}
+
+.grafico-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--plasea-espacio-2);
+}
+
+.grafico-filtros .form-label {
+  margin-bottom: 0.125rem;
+  font-size: 0.8125rem;
+}
+
+.grafico-subtitulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--plasea-espacio-2);
+  margin-bottom: var(--plasea-espacio-3);
+  font-weight: 600;
+}
+
+.grafico-titulo-menor {
+  margin: var(--plasea-espacio-4) 0 var(--plasea-espacio-2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.grafico {
+  margin: 0;
+}
+
+.barras {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barra-fila {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) 8.5rem;
+  align-items: center;
+  gap: var(--plasea-espacio-3);
+}
+
+.barra-etiqueta {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.barra-pista {
+  position: relative;
+  display: flex;
+  height: 1.375rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: var(--grafico-pista);
+}
+
+.barra {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 0.375rem;
+  transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.barra-pista-apilada .barra {
+  border-radius: 0;
+}
+
+.barra-pista-apilada .barra + .barra {
+  box-shadow: inset 2px 0 0 var(--plasea-superficie);
+}
+
+.barra-roja {
+  background: var(--grafico-roja);
+}
+
+.barra-amarilla {
+  background: var(--grafico-amarilla);
+}
+
+.barra-verde {
+  background: var(--grafico-verde);
+}
+
+.barra-inscritos {
+  background: var(--grafico-inscritos);
+}
+
+.barra-continuan {
+  background: var(--grafico-continuan);
+}
+
+.barra-no-continua {
+  background: var(--grafico-no-continua);
+}
+
+.barra-vacia {
+  align-items: center;
+  padding: 0 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--grafico-pista),
+    var(--grafico-pista) 6px,
+    var(--plasea-superficie) 6px,
+    var(--plasea-superficie) 12px
+  );
+}
+
+.barra-valor {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  column-gap: 0.5rem;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.barra-fila-activa .barra-etiqueta a {
+  color: var(--plasea-verde-texto);
+  text-decoration-thickness: 2px;
+}
+
+.barras-pares .barra-grupo {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.barras-pares .barra-pista {
+  height: 1rem;
+}
+
+.barras-pares .barra-valor {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.barras-semestres {
+  gap: 0.4rem;
+}
+
+.barras-semestres .barra-pista {
+  height: 1.125rem;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plasea-espacio-3);
+  margin: var(--plasea-espacio-3) 0 0;
+  font-size: 0.8125rem;
+  color: var(--plasea-texto-secundario);
+}
+
+.leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.leyenda-muestra {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 0.1875rem;
+}
+
+.datos-grafico {
+  margin-top: var(--plasea-espacio-3);
+}
+
+.datos-grafico summary {
+  width: fit-content;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--plasea-verde-texto);
+  cursor: pointer;
+}
+
+.datos-grafico .contenedor-tabla {
+  margin-top: var(--plasea-espacio-2);
+}
+
+.rejilla-graficos {
+  display: grid;
+  gap: var(--plasea-espacio-4);
+}
+
+@media (min-width: 1100px) {
+  .rejilla-graficos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .barra-fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.25rem;
+  }
+
+  .barra-fila > .barra-pista,
+  .barra-fila > .barra-grupo {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .barras-pares .barra-valor {
+    flex-direction: row;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra {
+    transition: none;
+  }
+}

@@ -1,0 +1,221 @@
+{% extends "app.html" %}
+{% block titulo %}Tablero de gráficos{% endblock %}
+{% block contenido %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Tablero de gráficos</h1>
+    <p>Panorama de alertas por corte y de continuidad entre semestres. Las cifras son las mismas de la lista de alertas y de la pantalla de continuidad.</p>
+  </div>
+</div>
+
+{# ---------------------------------------------------------------- RF-54 #}
+<section class="tarjeta mb-4" aria-labelledby="titulo-semaforo">
+  <div class="tarjeta-cuerpo pb-0">
+    <div class="grafico-cabecera">
+      <div>
+        <h2 id="titulo-semaforo" class="titulo-seccion mb-1">Estudiantes por estado de alerta</h2>
+        <p class="texto-secundario mb-0">Un estudiante cuenta una vez por cada asignatura en la que tiene alerta calculada.</p>
+      </div>
+      {% if periodo %}
+      <form method="get" class="grafico-filtros" aria-label="Elegir período y corte del semáforo">
+        {% if periodo_nc %}<input type="hidden" name="periodo_nc" value="{{ periodo_nc.id }}">{% endif %}
+        <div>
+          <label class="form-label" for="g-periodo">Período</label>
+          <select class="form-select form-select-sm" id="g-periodo" name="periodo">
+            {% for p in periodos %}<option value="{{ p.id }}" {% if p.id == periodo.id %}selected{% endif %}>{{ p.identificador }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="g-corte">Corte</label>
+          <select class="form-select form-select-sm" id="g-corte" name="corte">
+            {% for s in semaforo %}<option value="{{ s.corte.numero }}" {% if corte and s.corte.id == corte.id %}selected{% endif %}>Corte {{ s.corte.numero }}</option>{% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Ver</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not seleccionado or not seleccionado.total %}
+    <div class="estado-vacio">
+      <h3 class="h5">{{ "Corte " ~ corte.numero ~ " de " ~ periodo.identificador ~ " sin alertas calculadas" if corte else "No hay cortes para mostrar" }}</h3>
+      <p>Las alertas se calculan cuando los profesores envían el registro del corte.</p>
+    </div>
+  {% else %}
+    {% set s = seleccionado %}
+    <div class="tarjeta-cuerpo">
+      <p class="grafico-subtitulo">
+        Corte {{ s.corte.numero }} · {{ periodo.identificador }} · {{ s.total }} estudiantes-asignatura
+        <span class="insignia {{ 'insignia-corte-cerrado' if s.corte.cerrado_en else 'insignia-aviso' }}">{{ "Definitivo" if s.corte.cerrado_en else "Provisional" }}</span>
+      </p>
+      <figure class="grafico" aria-labelledby="titulo-semaforo">
+        <ul class="barras">
+          {% for clave, nombre, valor in [("roja", "Roja", s.roja), ("amarilla", "Amarilla", s.amarilla), ("verde", "Verde", s.verde)] %}
+            <li class="barra-fila">
+              <span class="barra-etiqueta"><span class="semaforo semaforo-{{ clave }}">{{ nombre }}</span></span>
+              <span class="barra-pista"><span class="barra barra-{{ clave }}" data-ancho="{{ (valor / maximo_semaforo * 100) | round(2) }}"></span></span>
+              <span class="barra-valor cifra-tabular"><strong>{{ valor }}</strong> <span class="texto-secundario">{{ s.porcentaje(valor) | decimal(1) }} %</span></span>
+            </li>
+          {% endfor %}
+        </ul>
+      </figure>
+
+      <h3 class="grafico-titulo-menor">Comparación entre los cortes de {{ periodo.identificador }}</h3>
+      <ul class="barras barras-apiladas" aria-label="Proporción de rojas, amarillas y verdes por corte">
+        {% for c in semaforo %}
+          <li class="barra-fila{% if c.corte.id == s.corte.id %} barra-fila-activa{% endif %}">
+            <span class="barra-etiqueta">
+              <a href="{{ url_for('graficos_tablero.tablero', periodo=periodo.id, corte=c.corte.numero, periodo_nc=periodo_nc.id if periodo_nc else None) }}"{% if c.corte.id == s.corte.id %} aria-current="true"{% endif %}>Corte {{ c.corte.numero }}</a>
+            </span>
+            {% if c.total %}
+              <span class="barra-pista barra-pista-apilada" role="img" aria-label="Corte {{ c.corte.numero }}: {{ c.roja }} rojas, {{ c.amarilla }} amarillas y {{ c.verde }} verdes">
+                <span class="barra barra-roja" data-ancho="{{ c.porcentaje(c.roja) | round(2) }}"></span>
+                <span class="barra barra-amarilla" data-ancho="{{ c.porcentaje(c.amarilla) | round(2) }}"></span>
+                <span class="barra barra-verde" data-ancho="{{ c.porcentaje(c.verde) | round(2) }}"></span>
+              </span>
+              <span class="barra-valor cifra-tabular">{{ c.roja }} · {{ c.amarilla }} · {{ c.verde }}</span>
+            {% else %}
+              <span class="barra-pista barra-vacia">Sin alertas calculadas</span>
+              <span class="barra-valor"></span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="leyenda" aria-hidden="true">
+        <span class="leyenda-item"><span class="leyenda-muestra barra-roja"></span>Roja</span>
+        <span class="leyenda-item"><span class="leyenda-muestra barra-amarilla"></span>Amarilla</span>
+        <span class="leyenda-item"><span class="leyenda-muestra barra-verde"></span>Verde</span>
+      </p>
+
+      <details class="datos-grafico">
+        <summary>Ver datos en tabla</summary>
+        <div class="contenedor-tabla">
+          <table class="table tabla-plasea tabla-compacta">
+            <caption class="visually-hidden">Estudiantes por estado de alerta y corte, {{ periodo.identificador }}</caption>
+            <thead><tr><th scope="col">Corte</th><th scope="col" class="text-end">Rojas</th><th scope="col" class="text-end">Amarillas</th><th scope="col" class="text-end">Verdes</th><th scope="col" class="text-end">Total</th><th scope="col">Estado</th></tr></thead>
+            <tbody>
+              {% for c in semaforo %}
+                <tr><th scope="row">Corte {{ c.corte.numero }}</th><td class="text-end cifra-tabular">{{ c.roja }}</td><td class="text-end cifra-tabular">{{ c.amarilla }}</td><td class="text-end cifra-tabular">{{ c.verde }}</td><td class="text-end cifra-tabular">{{ c.total }}</td><td>{{ "Sin datos" if not c.total else ("Definitivo" if c.corte.cerrado_en else "Provisional") }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <p class="mb-0 mt-3"><a href="{{ url_for('alertas_analitica.lista', periodo=periodo.id, corte=s.corte.numero) }}">Ver la lista de estudiantes en alerta del corte {{ s.corte.numero }}</a></p>
+    </div>
+  {% endif %}
+</section>
+
+<div class="rejilla-graficos">
+{# ---------------------------------------------------------------- RF-55 #}
+<section class="tarjeta" aria-labelledby="titulo-comparativo">
+  <div class="tarjeta-cuerpo">
+    <h2 id="titulo-comparativo" class="titulo-seccion mb-1">Inscritos por semestre y cuántos continúan</h2>
+    <p class="texto-secundario">Continúan: inscritos que se inscribieron en el período siguiente.</p>
+    {% if comparativo %}
+      <figure class="grafico" aria-labelledby="titulo-comparativo">
+        <ul class="barras barras-pares">
+          {% for f in comparativo %}
+            <li class="barra-fila">
+              <span class="barra-etiqueta cifra-tabular">{{ f.periodo.identificador }}</span>
+              <span class="barra-grupo">
+                <span class="barra-pista"><span class="barra barra-inscritos" data-ancho="{{ (f.inscritos / maximo_inscritos * 100) | round(2) }}"></span></span>
+                {% if f.continuan is not none %}
+                  <span class="barra-pista"><span class="barra barra-continuan" data-ancho="{{ (f.continuan / maximo_inscritos * 100) | round(2) }}"></span></span>
+                {% else %}
+                  <span class="barra-pista barra-vacia">Aún sin período siguiente</span>
+                {% endif %}
+              </span>
+              <span class="barra-valor cifra-tabular">
+                <span><strong>{{ f.inscritos }}</strong> inscritos</span>
+                {% if f.continuan is not none %}<span><strong>{{ f.continuan }}</strong> continúan</span>{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </figure>
+      <p class="leyenda" aria-hidden="true">
+        <span class="leyenda-item"><span class="leyenda-muestra barra-inscritos"></span>Inscritos</span>
+        <span class="leyenda-item"><span class="leyenda-muestra barra-continuan"></span>Continúan</span>
+      </p>
+      <details class="datos-grafico">
+        <summary>Ver datos en tabla</summary>
+        <div class="contenedor-tabla">
+          <table class="table tabla-plasea tabla-compacta">
+            <caption class="visually-hidden">Inscritos por período y continuidad en el siguiente</caption>
+            <thead><tr><th scope="col">Período</th><th scope="col" class="text-end">Inscritos</th><th scope="col" class="text-end">Continúan</th><th scope="col" class="text-end">No continúan</th><th scope="col" class="text-end">Índice</th></tr></thead>
+            <tbody>
+              {% for f in comparativo %}
+                <tr><th scope="row">{{ f.periodo.identificador }}</th><td class="text-end cifra-tabular">{{ f.inscritos }}</td><td class="text-end cifra-tabular">{{ f.continuan if f.continuan is not none else "—" }}</td><td class="text-end cifra-tabular">{{ f.no_continuan if f.no_continuan is not none else "—" }}</td><td class="text-end cifra-tabular">{{ (f.indice | decimal(1)) ~ " %" if f.indice is not none else "—" }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% else %}
+      <div class="estado-vacio"><h3 class="h5">Aún no hay períodos registrados</h3></div>
+    {% endif %}
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- RF-56 #}
+<section class="tarjeta" aria-labelledby="titulo-semestres">
+  <div class="tarjeta-cuerpo">
+    <div class="grafico-cabecera">
+      <div>
+        <h2 id="titulo-semestres" class="titulo-seccion mb-1">No continuidad por semestre de la carrera</h2>
+        <p class="texto-secundario mb-0">{% if periodo_nc %}{{ periodo_nc.identificador }} → {{ siguiente_nc.identificador }}. Sin graduados ni aplazados.{% endif %}</p>
+      </div>
+      {% if evaluables %}
+      <form method="get" class="grafico-filtros" aria-label="Elegir período de la no continuidad">
+        {% if periodo %}<input type="hidden" name="periodo" value="{{ periodo.id }}">{% endif %}
+        {% if corte %}<input type="hidden" name="corte" value="{{ corte.numero }}">{% endif %}
+        <div>
+          <label class="form-label" for="g-periodo-nc">Período</label>
+          <select class="form-select form-select-sm" id="g-periodo-nc" name="periodo_nc">
+            {% for p in evaluables %}<option value="{{ p.id }}" {% if p.id == periodo_nc.id %}selected{% endif %}>{{ p.identificador }}</option>{% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Ver</button>
+      </form>
+      {% endif %}
+    </div>
+    {% if not periodo_nc %}
+      <div class="estado-vacio"><h3 class="h5">Aún no hay dos períodos para comparar</h3><p>La continuidad se mide cuando existe el período siguiente.</p></div>
+    {% else %}
+      <p class="grafico-subtitulo">Índice del período: <strong class="cifra-tabular">{{ (total_nc.indice | decimal(1)) ~ " %" if total_nc.indice is not none else "sin datos" }}</strong> ({{ total_nc.no_continuan }} de {{ total_nc.base }})</p>
+      <figure class="grafico" aria-labelledby="titulo-semestres">
+        <ul class="barras barras-semestres">
+          {% for g in por_semestre %}
+            <li class="barra-fila">
+              <span class="barra-etiqueta cifra-tabular">Sem. {{ g.etiqueta }}</span>
+              <span class="barra-pista">{% if g.base %}<span class="barra barra-no-continua" data-ancho="{{ ((g.indice or 0) / maximo_indice * 100) | round(2) }}"></span>{% endif %}</span>
+              <span class="barra-valor cifra-tabular">
+                {% if g.base %}<strong>{{ g.indice | decimal(1) }} %</strong> <span class="texto-secundario">{{ g.no_continuan }}/{{ g.base }}</span>{% else %}<span class="texto-secundario">Sin inscritos</span>{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </figure>
+      <details class="datos-grafico">
+        <summary>Ver datos en tabla</summary>
+        <div class="contenedor-tabla">
+          <table class="table tabla-plasea tabla-compacta">
+            <caption class="visually-hidden">No continuidad por semestre cursado, {{ periodo_nc.identificador }}</caption>
+            <thead><tr><th scope="col">Semestre</th><th scope="col" class="text-end">Inscritos</th><th scope="col" class="text-end">Base</th><th scope="col" class="text-end">No continúan</th><th scope="col" class="text-end">Índice</th></tr></thead>
+            <tbody>
+              {% for g in por_semestre %}
+                <tr><th scope="row">{{ g.etiqueta }}</th><td class="text-end cifra-tabular">{{ g.inscritos }}</td><td class="text-end cifra-tabular">{{ g.base }}</td><td class="text-end cifra-tabular">{{ g.no_continuan }}</td><td class="text-end cifra-tabular">{{ (g.indice | decimal(1)) ~ " %" if g.indice is not none else "—" }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <p class="mb-0 mt-3"><a href="{{ url_for('continuidad_desercion.panel', periodo=periodo_nc.id) }}">Ver quiénes no continuaron y sus causas</a></p>
+    {% endif %}
+  </div>
+</section>
+</div>
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
+{% endblock %}

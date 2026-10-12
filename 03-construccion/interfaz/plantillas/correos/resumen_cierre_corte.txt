@@ -1,0 +1,16 @@
+Hola, {{ nombre }}:
+
+Se cerró el corte {{ resumen.corte.numero }} del período {{ periodo }} ({{ "cierre manual" if resumen.corte.tipo_cierre == "manual" else "cierre automático por vencimiento del límite de corrección" }}, {{ resumen.corte.cerrado_en | fecha_hora }}). Las alertas del corte ya son definitivas.
+
+Resumen del corte:
+- Alertas rojas: {{ resumen.rojas }}
+- Alertas amarillas: {{ resumen.amarillas }}
+- Estudiantes en riesgo alto (2 o más asignaturas en alerta): {{ resumen.riesgo_alto }}
+- Alertas nuevas frente al corte anterior: {{ resumen.nuevas }}
+
+Consulte la lista de estudiantes en alerta en PLASEA:
+{{ enlace }}
+
+Este aviso se envía una sola vez por corte cerrado.
+
+PLASEA - Facultad de Ingeniería de Sistemas
