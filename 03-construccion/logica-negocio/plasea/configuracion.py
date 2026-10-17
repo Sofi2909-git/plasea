@@ -50,7 +50,9 @@ def cargar_configuracion() -> dict[str, Any]:
         # --- Cookies de sesion (sin HTTPS en el prototipo local) ---
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
-        "SESSION_COOKIE_SECURE": _booleano("COOKIE_SEGURA", False),
+        "SESSION_COOKIE_SECURE": _booleano(
+            "COOKIE_SEGURA", _texto("ENTORNO", "desarrollo").lower() == "produccion"
+        ),
         # --- Proteccion CSRF (Flask-WTF) ---
         "WTF_CSRF_ENABLED": True,
         # --- Importacion CSV (RF-24: archivo de hasta 5 MB) ---
