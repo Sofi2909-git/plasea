@@ -30,6 +30,14 @@ def _booleano(nombre: str, por_defecto: bool = False) -> bool:
     return valor.strip().lower() in ("1", "true", "si", "yes")
 
 
+def _url_base_datos() -> str:
+    """Obtiene la conexion local o la proporcionada por Railway."""
+    url = _texto("URL_BASE_DATOS") or _texto("MYSQL_URL")
+    if url.startswith("mysql://"):
+        url = url.replace("mysql://", "mysql+pymysql://", 1)
+    return url
+
+
 def cargar_configuracion() -> dict[str, Any]:
     """Construye el diccionario de configuracion de Flask a partir del entorno."""
     return {
@@ -39,7 +47,7 @@ def cargar_configuracion() -> dict[str, Any]:
         "URL_BASE_ENLACES": _texto("URL_BASE_ENLACES", "http://localhost:5000"),
         "ZONA_HORARIA": "America/Bogota",
         # --- Base de datos (RNF-08: conexion por variable de entorno) ---
-        "SQLALCHEMY_DATABASE_URI": _texto("URL_BASE_DATOS"),
+        "SQLALCHEMY_DATABASE_URI": _url_base_datos(),
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
         "SQLALCHEMY_ENGINE_OPTIONS": {
             "pool_pre_ping": True,
@@ -50,7 +58,9 @@ def cargar_configuracion() -> dict[str, Any]:
         # --- Cookies de sesion (sin HTTPS en el prototipo local) ---
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
-        "SESSION_COOKIE_SECURE": _booleano("COOKIE_SEGURA", False),
+        "SESSION_COOKIE_SECURE": _booleano(
+            "COOKIE_SEGURA", _texto("ENTORNO", "desarrollo").lower() == "produccion"
+        ),
         # --- Proteccion CSRF (Flask-WTF) ---
         "WTF_CSRF_ENABLED": True,
         # --- Importacion CSV (RF-24: archivo de hasta 5 MB) ---
