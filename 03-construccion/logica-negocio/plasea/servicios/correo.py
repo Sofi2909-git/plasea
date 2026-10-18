@@ -85,9 +85,9 @@ def _enviar_smtp(mensaje: EmailMessage, datos: dict[str, Any]) -> None:
             servidor.send_message(mensaje)
         registro.info("Correo enviado a %s (%s).", mensaje["To"], mensaje["Subject"])
     except (smtplib.SMTPException, OSError) as error:
-        registro.error(
-            "No se pudo enviar el correo a %s (%s): %s",
+        registro.exception(
+            "No se pudo enviar el correo a %s (%s). Error: %s",
             mensaje["To"],
             mensaje["Subject"],
-            error.__class__.__name__,
+            error,
         )
