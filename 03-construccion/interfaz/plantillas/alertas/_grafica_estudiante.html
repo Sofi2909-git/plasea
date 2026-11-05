@@ -1,0 +1,81 @@
+{# Gráfica de un estudiante en una asignatura (RF-45 y RF-60).
+   Requiere: filas_corte (lista de FilaCorteDetalle), config (umbrales con que se calculó, o none),
+   gid (sufijo único del gráfico) y completa (true agrega nota acumulada y nota requerida).
+   Los anchos llegan en data-ancho y data-posicion (js/graficos.js y js/analitica.js). #}
+{% set nombres_estado = {"roja": "Roja", "amarilla": "Amarilla", "verde": "Verde"} %}
+{% set nombres_motivo = {"nota": "Por nota", "inasistencia": "Por inasistencia", "ambos": "Por nota e inasistencia"} %}
+<figure class="grafica-estudiante" aria-labelledby="ge-titulo-{{ gid }}">
+  <figcaption id="ge-titulo-{{ gid }}" class="visually-hidden">Notas por corte e inasistencia del estudiante en la asignatura</figcaption>
+
+  <h4 class="grafica-subtitulo">Nota de cada corte <span class="texto-secundario">(escala 1,0 a 5,0{% if config %}; la marca es la nota de aprobación, {{ config.nota_aprobacion | decimal }}{% endif %})</span></h4>
+  <ul class="barras barras-detalle">
+    {% for f in filas_corte %}
+      {% set a = f.alerta %}
+      <li class="barra-fila">
+        <span class="barra-etiqueta">Corte {{ f.corte.numero }}</span>
+        <span class="barra-pista" role="img" aria-label="Corte {{ f.corte.numero }}: {{ ('nota ' ~ (f.nota | decimal) ~ ' de 5,0') if f.nota is not none else 'sin nota' }}">
+          {% if f.nota is not none %}<span class="barra {{ 'barra-roja' if config and f.nota < config.nota_aprobacion else 'barra-verde' }}" data-ancho="{{ (f.nota / 5 * 100) | round(2) }}"></span>{% endif %}
+          {% if config %}<span class="medidor-marca" data-posicion="{{ (config.nota_aprobacion / 5 * 100) | round(2) }}"></span>{% endif %}
+        </span>
+        <span class="barra-valor cifra-tabular">
+          <strong>{{ (f.nota | decimal) if f.nota is not none else "Sin nota" }}</strong>
+          {% if a %}
+            <span class="semaforo semaforo-{{ a.estado_alerta }}">{{ nombres_estado[a.estado_alerta] }}</span>
+            <span class="motivo-alerta">{% if f.motivo %}{{ nombres_motivo[f.motivo] }} · {% endif %}{{ "Definitivo" if a.definitiva else "Provisional" }}</span>
+          {% else %}
+            <span class="texto-secundario">Sin alerta calculada</span>
+          {% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if completa %}
+  <h4 class="grafica-subtitulo">Nota acumulada y nota requerida <span class="texto-secundario">(la requerida es la que necesita en los cortes que faltan para llegar a {{ config.nota_aprobacion | decimal if config else "3,0" }})</span></h4>
+  <ul class="barras barras-detalle">
+    {% for f in filas_corte if f.alerta %}
+      {% set a = f.alerta %}
+      <li class="barra-fila">
+        <span class="barra-etiqueta">Corte {{ f.corte.numero }} · acumulada</span>
+        <span class="barra-pista" role="img" aria-label="Corte {{ f.corte.numero }}: nota acumulada {{ (a.nota_acumulada | decimal(2)) if a.nota_acumulada is not none else 'sin notas' }}">
+          {% if a.nota_acumulada is not none %}<span class="barra barra-acumulada" data-ancho="{{ (a.nota_acumulada / 5 * 100) | round(2) }}"></span>{% endif %}
+          {% if config %}<span class="medidor-marca" data-posicion="{{ (config.nota_aprobacion / 5 * 100) | round(2) }}"></span>{% endif %}
+        </span>
+        <span class="barra-valor cifra-tabular"><strong>{{ (a.nota_acumulada | decimal(2)) if a.nota_acumulada is not none else "Sin notas" }}</strong></span>
+      </li>
+      <li class="barra-fila">
+        <span class="barra-etiqueta">Corte {{ f.corte.numero }} · requerida</span>
+        {% if a.nota_requerida is none %}
+          <span class="barra-pista barra-vacia">No aplica</span>
+          <span class="barra-valor"></span>
+        {% else %}
+          <span class="barra-pista" role="img" aria-label="Corte {{ f.corte.numero }}: nota requerida {{ a.nota_requerida | decimal(2) }}{{ ', supera 5,0' if a.nota_requerida > 5 }}">
+            <span class="barra {{ 'barra-roja' if a.nota_requerida > 5 else 'barra-requerida' }}" data-ancho="{{ ([a.nota_requerida, 5] | min / 5 * 100) | round(2) }}"></span>
+          </span>
+          <span class="barra-valor cifra-tabular"><strong class="{{ 'valor-critico' if a.nota_requerida > 5 }}">{{ a.nota_requerida | decimal(2) }}</strong>{% if a.nota_requerida > 5 %}<span class="texto-critico">Supera 5,0</span>{% elif a.nota_requerida <= 1 %}<span class="texto-secundario">Ya aprobada</span>{% endif %}</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h4 class="grafica-subtitulo">Inasistencia acumulada <span class="texto-secundario">(horas ausentes sobre las horas totales del período{% if config %}; marcas: amarilla desde {{ config.umbral_amarillo_inasistencia | porcentaje }} %, pérdida sobre {{ config.limite_perdida_inasistencia | porcentaje }} %{% endif %})</span></h4>
+  <ul class="barras barras-detalle">
+    {% for f in filas_corte if f.alerta %}
+      {% set a = f.alerta %}
+      <li class="barra-fila">
+        <span class="barra-etiqueta">Corte {{ f.corte.numero }}</span>
+        <span class="barra-pista" role="img" aria-label="Corte {{ f.corte.numero }}: inasistencia acumulada {{ a.porcentaje_inasistencia | decimal(1) }} %">
+          <span class="barra {{ ('barra-roja' if a.porcentaje_inasistencia > config.limite_perdida_inasistencia else ('barra-amarilla' if a.porcentaje_inasistencia >= config.umbral_amarillo_inasistencia else 'barra-verde')) if config else 'barra-verde' }}" data-ancho="{{ ([a.porcentaje_inasistencia, 100] | min) | round(2) }}"></span>
+          {% if config %}
+            <span class="medidor-marca" data-posicion="{{ config.umbral_amarillo_inasistencia }}"></span>
+            <span class="medidor-marca medidor-marca-roja" data-posicion="{{ config.limite_perdida_inasistencia }}"></span>
+          {% endif %}
+        </span>
+        <span class="barra-valor cifra-tabular"><strong>{{ a.porcentaje_inasistencia | decimal(1) }} %</strong><span class="texto-secundario">{{ a.horas_ausentes }} de {{ a.horas_totales }} h</span></span>
+      </li>
+    {% else %}
+      <li class="texto-secundario">Sin alertas calculadas todavía.</li>
+    {% endfor %}
+  </ul>
+</figure>

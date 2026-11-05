@@ -2346,3 +2346,191 @@ body {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   RF-64 a RF-67 - Pérdida reiterada, gráficas por estudiante y por curso,
+   documentos imprimibles de estadística. Los anchos llegan en data-ancho
+   (js/graficos.js) y las marcas en data-posicion (js/analitica.js).
+   ========================================================================== */
+:root {
+  --grafico-perdida: #7a271a;
+  --grafico-sin-nota: #667085;
+  --grafico-acumulada: var(--plasea-verde-activo);
+  --grafico-requerida: #8a6a1f;
+}
+
+.insignia-reiterada {
+  color: var(--plasea-blanco);
+  background: var(--grafico-perdida);
+  font-size: 0.75rem;
+}
+
+.aviso-reiterada {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--plasea-espacio-2) var(--plasea-espacio-3);
+  margin-bottom: var(--plasea-espacio-4);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--plasea-error-texto);
+  border-radius: var(--plasea-radio);
+  background: var(--plasea-error-fondo);
+  color: var(--plasea-texto);
+  font-size: 0.9375rem;
+}
+
+.barra-perdida {
+  background: var(--grafico-perdida);
+}
+
+.barra-sin-nota {
+  background: var(--grafico-sin-nota);
+}
+
+.barra-acumulada {
+  background: var(--grafico-acumulada);
+}
+
+.barra-requerida {
+  background: var(--grafico-requerida);
+}
+
+.semaforo-sin-nota {
+  color: var(--plasea-neutro-texto);
+  background: var(--plasea-neutro-fondo);
+}
+
+.grafica-subtitulo {
+  margin: var(--plasea-espacio-4) 0 var(--plasea-espacio-2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.grafica-subtitulo:first-of-type {
+  margin-top: 0;
+}
+
+.grafica-subtitulo .texto-secundario {
+  font-weight: 500;
+}
+
+.grafica-estudiante {
+  margin: 0;
+}
+
+.distribucion-corte + .distribucion-corte {
+  margin-top: var(--plasea-espacio-4);
+  padding-top: var(--plasea-espacio-3);
+  border-top: 1px solid var(--plasea-borde);
+}
+
+.tabla-distribucion {
+  min-width: 34rem;
+  margin-top: var(--plasea-espacio-3);
+}
+
+.tabla-reporte {
+  min-width: 40rem;
+}
+
+.barras-detalle .barra-valor,
+.barras-avance .barra-valor {
+  align-items: baseline;
+}
+
+.barras-detalle .barra-valor .motivo-alerta {
+  display: inline;
+  margin-top: 0;
+}
+
+.barras-detalle .medidor-marca,
+.barras-detalle .medidor-marca-roja {
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+@media (min-width: 576px) {
+  .barras-detalle .barra-fila {
+    grid-template-columns: 8.5rem minmax(0, 1fr) 14rem;
+  }
+
+  .barras-avance .barra-fila {
+    grid-template-columns: 9.5rem minmax(0, 1fr) 9.5rem;
+  }
+}
+
+.acciones-curso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plasea-espacio-2);
+}
+
+/* Documentos imprimibles de RF-65, RF-67 y las gráficas del histórico de RF-60 */
+.grafica-asignatura {
+  margin: 0.5rem 0 0.75rem;
+  break-inside: avoid;
+}
+
+.grafica-asignatura h3 {
+  margin: 0 0 0.25rem;
+  font-size: 9.5pt;
+  font-weight: 700;
+}
+
+.hoja-impresion .barras {
+  gap: 0.35rem;
+}
+
+.hoja-impresion .barra-fila {
+  grid-template-columns: 7rem minmax(0, 1fr) 11rem;
+  gap: 0.5rem;
+}
+
+.hoja-impresion .barra-pista {
+  height: 1rem;
+}
+
+.hoja-impresion .barra-valor,
+.hoja-impresion .barra-etiqueta {
+  font-size: 8.5pt;
+}
+
+.hoja-impresion .grafica-subtitulo {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 9pt;
+}
+
+.hoja-impresion .distribucion-corte {
+  break-inside: avoid;
+}
+
+.hoja-impresion .tabla-distribucion,
+.hoja-impresion .tabla-reporte {
+  min-width: 0;
+  width: 100%;
+  font-size: 8.5pt;
+}
+
+.hoja-impresion .contenedor-tabla {
+  overflow: visible;
+}
+
+.hoja-impresion tr {
+  break-inside: avoid;
+}
+
+@media print {
+  .barra {
+    transition: none;
+  }
+
+  .hoja-impresion .barra,
+  .hoja-impresion .barra-pista,
+  .hoja-impresion .semaforo,
+  .hoja-impresion .insignia,
+  .hoja-impresion .medidor-marca {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -46,7 +46,7 @@ class ResultadoValidacion:
 
 def _hash_identificador(identificador: str) -> str:
     """Devuelve el SHA-256 del identificador de sesión."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01
     return hashlib.sha256(identificador.encode("utf-8")).hexdigest()
 
@@ -71,7 +71,7 @@ def iniciar_sesion(correo: str, contrasena: str) -> str:
     Raises:
         ErrorNegocio: con el mensaje que se debe mostrar.
     """
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01 / RF-05
     correo_normalizado = (correo or "").strip().lower()
     try:
@@ -193,7 +193,7 @@ def validar_sesion(identificador: Optional[str]) -> ResultadoValidacion:
     Cierra la sesión si superó el tiempo de inactividad (RF-04) o si la cuenta
     dejó de estar activa (RF-11).
     """
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-04
     if not identificador or len(identificador) > 128:
         return ResultadoValidacion(sesion=None)
@@ -236,7 +236,7 @@ def validar_sesion(identificador: Optional[str]) -> ResultadoValidacion:
 
 def _cerrar(sesion: SesionUsuario, motivo: str, momento: dt.datetime) -> None:
     """Marca la sesión como cerrada y deja el evento en la bitácora."""
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-03 / RF-04
     sesion.cerrada_en = momento
     sesion.motivo_cierre = motivo
@@ -251,7 +251,7 @@ def _cerrar(sesion: SesionUsuario, motivo: str, momento: dt.datetime) -> None:
 
 def cerrar_sesion(identificador: Optional[str]) -> None:
     """Cierra voluntariamente la sesión indicada (RF-03). Es idempotente."""
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-03
     if not identificador or len(identificador) > 128:
         return
@@ -280,7 +280,7 @@ def cerrar_sesiones_de_usuario(usuario_id: int, motivo: str) -> int:
     Returns:
         Número de sesiones cerradas.
     """
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-11
     momento = ahora()
     sesiones = db.session.scalars(

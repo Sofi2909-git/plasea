@@ -193,5 +193,6 @@ def resultados() -> Any:
             asignaturas=asignaturas,
             cursos=cursos,
             profesores=analitica.profesores_del_periodo(periodo),
+            distribucion=analitica.distribucion_por_corte(periodo, filtros),
         )
     return render_template("alertas/resultados.html", **contexto)

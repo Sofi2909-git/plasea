@@ -63,6 +63,8 @@
             {% if r.corte_en_carga %}
               <a class="btn btn-outline-primary btn-sm" href="{{ url_for('registro_asistencia_notas.notas', curso_id=curso.id, numero=r.corte_en_carga.numero) }}">Notas del corte {{ r.corte_en_carga.numero }}</a>
             {% endif %}
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('graficos_tablero.reporte_curso', curso_id=curso.id) }}">Estadística de reporte</a>
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('exportacion.reporte_curso_imprimible', curso_id=curso.id) }}" aria-label="Exportar PDF de la estadística de {{ curso.asignatura.nombre }} {{ curso.codigo }}">Exportar PDF</a>
           </div>
         </div>
       </article>

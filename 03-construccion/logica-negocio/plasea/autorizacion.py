@@ -16,7 +16,8 @@ from urllib.parse import urlsplit
 
 from flask import Flask, abort, flash, g, redirect, request, session, url_for
 
-from plasea.servicios import sesiones
+from plasea.servicios import registro_academico, sesiones
+from plasea.servicios.comunes import ErrorNegocio
 from plasea.servicios.cuentas import ROL_ADMINISTRADOR, ROL_AUDITOR, ROL_PROFESOR
 
 CLAVE_SESION = "id_sesion"
@@ -150,7 +151,7 @@ MENU: tuple[OpcionMenu, ...] = (
 
 def cargar_sesion() -> None:
     """Valida la sesión de la petición y deja el usuario en ``g`` (RF-04)."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-04
     g.sesion = None
     g.usuario = None
@@ -174,7 +175,7 @@ def cargar_sesion() -> None:
 
 def destino_seguro(destino: Optional[str]) -> Optional[str]:
     """Acepta solo rutas internas de la aplicación como destino tras iniciar sesión."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01
     if not destino or not destino.startswith("/") or destino.startswith("//"):
         return None
@@ -186,7 +187,7 @@ def destino_seguro(destino: Optional[str]) -> Optional[str]:
 
 def _redirigir_a_inicio_sesion() -> Any:
     """Redirige al inicio de sesión conservando la ruta solicitada."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-02
     if g.get("sesion_expirada"):
         flash("Su sesión se cerró por inactividad. Inicie sesión de nuevo.", "aviso")
@@ -203,7 +204,7 @@ def login_requerido(vista: F) -> F:
 
     @wraps(vista)
     def envoltura(*args: Any, **kwargs: Any) -> Any:
-        # Responsable: Islender Arturo Alfonso
+        # Responsable: Sofi Celmar Galvis
         # RF-02
         if g.get("usuario") is None:
             return _redirigir_a_inicio_sesion()
@@ -218,7 +219,7 @@ def rol_requerido(*roles: str) -> Callable[[F], F]:
     def decorador(vista: F) -> F:
         @wraps(vista)
         def envoltura(*args: Any, **kwargs: Any) -> Any:
-            # Responsable: Islender Arturo Alfonso
+            # Responsable: Sofi Celmar Galvis
             # RF-02
             if g.get("usuario") is None:
                 return _redirigir_a_inicio_sesion()
@@ -231,9 +232,25 @@ def rol_requerido(*roles: str) -> Callable[[F], F]:
     return decorador
 
 
+def curso_propio_o_error(curso_id: int) -> Any:
+    """Curso del profesor autenticado; 404 si no existe y 403 si es de otro (RF-02).
+
+    Lo usan las pantallas y los PDF de un curso del profesor (RF-66 y RF-67):
+    abrir por URL el curso de otro docente responde HTTP 403.
+    """
+    # Responsable: Sofi Celmar Galvis
+    # RF-02
+    try:
+        return registro_academico.obtener_curso_propio(curso_id, g.usuario.id)
+    except registro_academico.AccesoDenegado:
+        abort(403)
+    except ErrorNegocio:
+        abort(404)
+
+
 def opciones_menu() -> list[dict[str, Any]]:
     """Devuelve las opciones del menú permitidas para el rol de la sesión (RF-02)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-02 (opciones de E2, E3 y E12: Yeferson Fabián Jaimes, RF-13 a RF-23,
     # RF-62 y RF-63; opciones de E5 y E6: Islender Arturo Alfonso, RF-35, RF-44;
     # opciones de análisis: Wilson D'Alessandro Saavedra Rolón, RF-33, RF-47 a RF-49)
@@ -260,13 +277,13 @@ def opciones_menu() -> list[dict[str, Any]]:
 
 def registrar(app: Flask) -> None:
     """Conecta la carga de sesión y el menú a la aplicación."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-02
     app.before_request(cargar_sesion)
 
     @app.context_processor
     def contexto_autorizacion() -> dict[str, Any]:
-        # Responsable: Islender Arturo Alfonso
+        # Responsable: Sofi Celmar Galvis
         # RF-02
         return {
             "usuario_actual": g.get("usuario"),

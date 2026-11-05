@@ -1,0 +1,12 @@
+{# Encabezado de los documentos imprimibles de RF-65 y RF-67. Requiere: titulo_documento. #}
+<div class="barra-impresion no-imprimir">
+  <span>Vista imprimible: use «Guardar como PDF» en el diálogo de impresión (A4 o Carta).</span>
+  <button type="button" class="btn btn-primary btn-sm" data-imprimir>Imprimir o guardar PDF</button>
+</div>
+<header class="encabezado-impresion">
+  <img src="{{ url_for('static', filename='img/unisimon-verde.png') }}" alt="Universidad Simón Bolívar" width="78" height="50" class="logo-impresion">
+  <div>
+    <p class="mb-0 small">Universidad Simón Bolívar · Facultad de Ingeniería de Sistemas · PLASEA</p>
+    <h1>{{ titulo_documento }}</h1>
+  </div>
+</header>

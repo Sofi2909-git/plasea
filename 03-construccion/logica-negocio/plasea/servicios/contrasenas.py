@@ -47,7 +47,7 @@ def generar_hash(contrasena: str) -> str:
 
 def verificar(contrasena: str, contrasena_hash: str | None) -> bool:
     """Compara una contraseña con su hash en tiempo similar exista o no el hash."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01
     if not contrasena_hash or len(contrasena) > LONGITUD_MAXIMA:
         check_password_hash(_HASH_SIMULADO, contrasena[:LONGITUD_MAXIMA])

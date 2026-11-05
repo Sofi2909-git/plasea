@@ -1,0 +1,18 @@
+{# Estudiantes del corte elegido por estado de alerta (RF-66 y RF-67).
+   Requiere: datos (ReporteCurso con corte) y gid. El estado va siempre con su texto. #}
+{% set inscritos = datos.filas | length %}
+<figure class="grafico" aria-labelledby="es-titulo-{{ gid }}">
+  <figcaption id="es-titulo-{{ gid }}" class="visually-hidden">Estudiantes del corte {{ datos.corte.numero }} por estado de alerta</figcaption>
+  <ul class="barras barras-detalle">
+    {% for clave, nombre, clase in [("roja", "Roja", "barra-roja"), ("amarilla", "Amarilla", "barra-amarilla"), ("sin_nota", "Sin nota", "barra-sin-nota"), ("verde", "Verde", "barra-verde")] %}
+      {% set n = datos.total(clave) %}
+      <li class="barra-fila">
+        <span class="barra-etiqueta"><span class="semaforo semaforo-{{ clave | replace('_', '-') }}">{{ nombre }}</span></span>
+        <span class="barra-pista" role="img" aria-label="{{ n }} de {{ inscritos }} estudiantes en estado {{ nombre | lower }}">
+          {% if inscritos %}<span class="barra {{ clase }}" data-ancho="{{ (n * 100 / inscritos) | round(2) }}"></span>{% endif %}
+        </span>
+        <span class="barra-valor cifra-tabular"><strong>{{ n }}</strong> <span class="texto-secundario">{{ ((n * 100 / inscritos) | round(1) | string | replace('.', ',')) ~ " %" if inscritos else "" }}</span></span>
+      </li>
+    {% endfor %}
+  </ul>
+</figure>

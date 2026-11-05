@@ -65,7 +65,7 @@ def agregar_cabeceras(respuesta: Response) -> Response:
 
     Sin caché, el botón "atrás" no muestra datos protegidos tras cerrar sesión (RF-03).
     """
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-03
     respuesta.headers.setdefault("Content-Security-Policy", POLITICA_CONTENIDO)
     respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -93,13 +93,13 @@ def registrar(app: Flask) -> None:
 
     @app.errorhandler(403)
     def acceso_denegado(_error: Any) -> tuple[str, int]:
-        # Responsable: Islender Arturo Alfonso
+        # Responsable: Sofi Celmar Galvis
         # RF-02
         return render_template("errores/403.html"), 403
 
     @app.errorhandler(404)
     def no_encontrado(_error: Any) -> tuple[str, int]:
-        # Responsable: Islender Arturo Alfonso
+        # Responsable: Sofi Celmar Galvis
         # RF-02
         return render_template("errores/404.html"), 404
 

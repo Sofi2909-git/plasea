@@ -6,7 +6,10 @@
   mismo período y corte). Se calcula en la consulta a partir de ``alertas``,
   así se actualiza cada vez que se recalculan.
 - RF-47: histórico por semestre con resultado (aprobada o perdida) y motivo.
-- RF-48: inscritos, aprobados, en alerta y perdidos por asignatura, curso y corte.
+- RF-48: inscritos, aprobados, en alerta y perdidos por asignatura, curso y corte,
+  y la distribución de estudiantes por estado y motivo en cada corte.
+- RF-64: la pérdida reiterada (``servicios/perdida_reiterada.py``) se muestra en
+  el detalle de la alerta (RF-45) y en el histórico imprimible (RF-60).
 
 Todas las consultas son por lotes (sin una consulta por fila).
 """
@@ -37,7 +40,7 @@ from plasea.modelos import (
     Usuario,
     db,
 )
-from plasea.servicios import alertas, calculos
+from plasea.servicios import alertas, calculos, perdida_reiterada
 from plasea.servicios.comunes import ErrorNegocio, ahora
 
 RESULTADO_APROBADA = "aprobada"
@@ -92,6 +95,15 @@ class FilaCorteDetalle:
     nota: Optional[Decimal]
     alerta: Optional[Alerta]
 
+    @property
+    def motivo(self) -> Optional[str]:
+        """Motivo de la alerta del corte: nota, inasistencia, ambos o ``None``."""
+        if self.alerta is None or self.alerta.estado_alerta == calculos.ESTADO_VERDE:
+            return None
+        return perdida_reiterada.motivo_de(
+            self.alerta.motivo_nota, self.alerta.motivo_inasistencia
+        )
+
 
 @dataclass(frozen=True)
 class DetalleAlerta:
@@ -104,6 +116,7 @@ class DetalleAlerta:
     seleccionada: Optional[FilaCorteDetalle]
     riesgo_alto: bool
     configuracion: Optional[ConfiguracionAlerta]
+    reiterada: Optional[perdida_reiterada.PerdidaReiterada] = None
 
     @property
     def motivo(self) -> Optional[str]:
@@ -174,6 +187,7 @@ def detalle_alerta(
         configuracion=(
             seleccionada.alerta.configuracion_alerta if seleccionada else None
         ),
+        reiterada=perdida_reiterada.de_inscripcion(inscripcion.id),
     )
 
 
@@ -194,6 +208,9 @@ class FilaHistorico:
     inasistencia: Decimal
     resultado: str
     motivo: Optional[str]
+    cortes_alerta: list[FilaCorteDetalle] = field(default_factory=list)
+    configuracion_alerta: Optional[ConfiguracionAlerta] = None
+    reiterada: Optional[perdida_reiterada.PerdidaReiterada] = None
 
     @property
     def nombre_resultado(self) -> str:
@@ -351,6 +368,15 @@ def historico_estudiante(
             .group_by(Ausencia.inscripcion_id)
         ).all()
     )
+    alertas_de: dict[int, dict[int, Alerta]] = {}
+    for alerta in db.session.scalars(
+        select(Alerta)
+        .options(joinedload(Alerta.configuracion_alerta), joinedload(Alerta.corte))
+        .where(Alerta.inscripcion_id.in_(ids))
+        .order_by(Alerta.corte_id)
+    ):
+        alertas_de.setdefault(alerta.inscripcion_id, {})[alerta.corte.numero] = alerta
+    reiteradas = perdida_reiterada.de_inscripciones(ids if inscripciones else [])
     hoy = ahora().date()
     por_matricula: dict[int, list[Inscripcion]] = {}
     for inscripcion in inscripciones:
@@ -389,6 +415,8 @@ def historico_estudiante(
                 )
             else:
                 resultado, motivo = RESULTADO_EN_CURSO, None
+            por_corte = alertas_de.get(inscripcion.id, {})
+            ultima = por_corte[max(por_corte)] if por_corte else None
             semestre.filas.append(
                 FilaHistorico(
                     inscripcion,
@@ -399,6 +427,14 @@ def historico_estudiante(
                     inasistencia,
                     resultado,
                     motivo,
+                    cortes_alerta=[
+                        FilaCorteDetalle(c, nota, por_corte.get(c.numero))
+                        for c, nota in zip(cortes, valores)
+                    ],
+                    configuracion_alerta=(
+                        ultima.configuracion_alerta if ultima else None
+                    ),
+                    reiterada=reiteradas.get(inscripcion.id),
                 )
             )
         semestres.append(semestre)
@@ -460,6 +496,60 @@ class FilaResultado:
         return calculos.porcentaje(valor, self.inscritos)
 
 
+def _condiciones_resultado(ultimo: bool):
+    """Condiciones SQL de aprobado y perdido sobre ``alertas`` (RF-48).
+
+    Requiere que la consulta incluya ``alertas`` unida a ``configuraciones_alerta``
+    para comparar con los umbrales con que se calculó cada alerta.
+
+    Returns:
+        (aprobado, perdido, perdido por nota, perdido por inasistencia).
+    """
+    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # RF-48
+    inasistencia_ok = (
+        Alerta.porcentaje_inasistencia
+        <= ConfiguracionAlerta.limite_perdida_inasistencia
+    )
+    perdido_inasistencia = ~inasistencia_ok
+    if ultimo:
+        aprobado = and_(
+            Alerta.nota_acumulada >= ConfiguracionAlerta.nota_aprobacion,
+            inasistencia_ok,
+        )
+        perdido_nota = or_(
+            Alerta.nota_acumulada.is_(None),
+            Alerta.nota_acumulada < ConfiguracionAlerta.nota_aprobacion,
+        )
+    else:
+        aprobado = and_(
+            Alerta.nota_requerida <= calculos.NOTA_MINIMA_ESCALA, inasistencia_ok
+        )
+        perdido_nota = and_(
+            Alerta.nota_requerida.is_not(None),
+            Alerta.nota_requerida > calculos.NOTA_MAXIMA_ESCALA,
+        )
+    return (
+        aprobado,
+        or_(perdido_nota, perdido_inasistencia),
+        perdido_nota,
+        perdido_inasistencia,
+    )
+
+
+def _filtrar_resultados(consulta, filtros: FiltrosResultados):
+    """Aplica los filtros de asignatura, curso y profesor (RF-48)."""
+    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # RF-48
+    if filtros.asignatura_id:
+        consulta = consulta.where(Curso.asignatura_id == filtros.asignatura_id)
+    if filtros.curso_id:
+        consulta = consulta.where(Curso.id == filtros.curso_id)
+    if filtros.profesor_id:
+        consulta = consulta.where(Curso.profesor_usuario_id == filtros.profesor_id)
+    return consulta
+
+
 def resultados(
     corte: Corte, filtros: FiltrosResultados
 ) -> tuple[list[FilaResultado], FilaResultado]:
@@ -477,27 +567,7 @@ def resultados(
     # Responsable: Wilson D'Alessandro Saavedra Rolón
     # RF-48
     ultimo = corte.numero == max(c.numero for c in corte.periodo_academico.cortes)
-    inasistencia_ok = (
-        Alerta.porcentaje_inasistencia
-        <= ConfiguracionAlerta.limite_perdida_inasistencia
-    )
-    if ultimo:
-        aprobado = and_(
-            Alerta.nota_acumulada >= ConfiguracionAlerta.nota_aprobacion,
-            inasistencia_ok,
-        )
-        perdido = or_(
-            Alerta.nota_acumulada.is_(None),
-            Alerta.nota_acumulada < ConfiguracionAlerta.nota_aprobacion,
-            ~inasistencia_ok,
-        )
-    else:
-        aprobado = and_(
-            Alerta.nota_requerida <= calculos.NOTA_MINIMA_ESCALA, inasistencia_ok
-        )
-        perdido = or_(
-            Alerta.nota_requerida > calculos.NOTA_MAXIMA_ESCALA, ~inasistencia_ok
-        )
+    aprobado, perdido, _por_nota, _por_inasistencia = _condiciones_resultado(ultimo)
     profesor = aliased(Usuario)
     consulta = (
         select(
@@ -529,12 +599,7 @@ def resultados(
         )
         .order_by(Asignatura.nombre, Curso.codigo)
     )
-    if filtros.asignatura_id:
-        consulta = consulta.where(Curso.asignatura_id == filtros.asignatura_id)
-    if filtros.curso_id:
-        consulta = consulta.where(Curso.id == filtros.curso_id)
-    if filtros.profesor_id:
-        consulta = consulta.where(Curso.profesor_usuario_id == filtros.profesor_id)
+    consulta = _filtrar_resultados(consulta, filtros)
     filas = [
         FilaResultado(a, n, c, cid, p, int(i), int(ap or 0), int(al or 0), int(pe or 0))
         for a, n, c, cid, p, i, ap, al, pe in db.session.execute(consulta)
@@ -551,6 +616,120 @@ def resultados(
         sum(f.perdidos for f in filas),
     )
     return filas, total
+
+
+@dataclass(frozen=True)
+class ConteoMotivos:
+    """Estudiantes de un estado separados por motivo (RF-48)."""
+
+    nota: int = 0
+    inasistencia: int = 0
+    ambos: int = 0
+
+    @property
+    def total(self) -> int:
+        """Estudiantes del estado, sin importar el motivo."""
+        return self.nota + self.inasistencia + self.ambos
+
+
+@dataclass(frozen=True)
+class DistribucionCorte:
+    """Estudiantes por estado y motivo en un corte (RF-48 y RF-65).
+
+    ``verde``, ``amarilla`` y ``roja`` suman todas las alertas del corte y
+    coinciden con la lista de RF-44. ``perdidos`` se cuenta aparte con la misma
+    regla de la tabla de RF-48; no es un subconjunto de ``roja``.
+    """
+
+    corte: Corte
+    verde: int
+    amarilla: ConteoMotivos
+    roja: ConteoMotivos
+    perdidos: ConteoMotivos
+
+    @property
+    def total(self) -> int:
+        """Alertas calculadas en el corte (una por estudiante y asignatura)."""
+        return self.verde + self.amarilla.total + self.roja.total
+
+    @property
+    def definitivo(self) -> bool:
+        """El corte está cerrado, así que las alertas son definitivas."""
+        return self.corte.cerrado_en is not None
+
+    def porcentaje(self, valor: int) -> Optional[Decimal]:
+        """Porcentaje del valor sobre el total del corte."""
+        return calculos.porcentaje(valor, self.total)
+
+
+def distribucion_por_corte(
+    periodo: PeriodoAcademico, filtros: FiltrosResultados
+) -> list[DistribucionCorte]:
+    """Estudiantes en verde, amarillo, rojo y perdidos por corte y motivo (RF-48).
+
+    Una consulta agrupada por corte, con los mismos filtros y la misma regla de
+    perdido que ``resultados``, así la gráfica coincide con la tabla.
+    """
+    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # RF-48
+    cortes = sorted(periodo.cortes, key=lambda c: c.numero)
+    if not cortes:
+        return []
+    ultimo = cortes[-1].numero
+    solo_nota = and_(
+        Alerta.motivo_nota.is_(True), Alerta.motivo_inasistencia.is_(False)
+    )
+    solo_inasistencia = and_(
+        Alerta.motivo_nota.is_(False), Alerta.motivo_inasistencia.is_(True)
+    )
+    ambos = and_(Alerta.motivo_nota.is_(True), Alerta.motivo_inasistencia.is_(True))
+
+    def suma(condicion):
+        # Responsable: Wilson D'Alessandro Saavedra Rolón
+        # RF-48
+        return func.sum(case((condicion, 1), else_=0))
+
+    distribucion: list[DistribucionCorte] = []
+    for corte in cortes:
+        _aprobado, _perdido, por_nota, por_inasistencia = _condiciones_resultado(
+            corte.numero == ultimo
+        )
+        consulta = (
+            select(
+                suma(Alerta.estado_alerta == calculos.ESTADO_VERDE),
+                *[
+                    suma(and_(Alerta.estado_alerta == estado, motivo))
+                    for estado in (calculos.ESTADO_AMARILLA, calculos.ESTADO_ROJA)
+                    for motivo in (solo_nota, solo_inasistencia, ambos)
+                ],
+                suma(and_(por_nota, ~por_inasistencia)),
+                suma(and_(~por_nota, por_inasistencia)),
+                suma(and_(por_nota, por_inasistencia)),
+            )
+            .join(Inscripcion, Inscripcion.id == Alerta.inscripcion_id)
+            .join(Curso, Curso.id == Inscripcion.curso_id)
+            .join(
+                ConfiguracionAlerta,
+                ConfiguracionAlerta.id == Alerta.configuracion_alerta_id,
+            )
+            .where(Alerta.corte_id == corte.id)
+        )
+        fila = [
+            int(valor or 0)
+            for valor in db.session.execute(
+                _filtrar_resultados(consulta, filtros)
+            ).one()
+        ]
+        distribucion.append(
+            DistribucionCorte(
+                corte,
+                fila[0],
+                ConteoMotivos(*fila[1:4]),
+                ConteoMotivos(*fila[4:7]),
+                ConteoMotivos(*fila[7:10]),
+            )
+        )
+    return distribucion
 
 
 def profesores_del_periodo(periodo: PeriodoAcademico) -> list[tuple[int, str]]:

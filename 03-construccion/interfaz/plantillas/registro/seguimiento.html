@@ -7,6 +7,7 @@
     <h1>Cómo van mis estudiantes</h1>
     <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · período {{ curso.periodo_academico.identificador }}. Primero quienes están en rojo, luego en amarillo.</p>
   </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('graficos_tablero.reporte_curso', curso_id=curso.id, corte=corte.numero if corte else None) }}">Estadística de reporte</a>
   {% if disponibles %}
   <nav class="selector-cortes" aria-label="Elegir corte">
     {% for c in curso.periodo_academico.cortes | sort(attribute="numero") %}

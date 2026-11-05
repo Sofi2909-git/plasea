@@ -1,0 +1,11 @@
+{# Marca de pérdida reiterada (RF-64). Requiere: reiterada (PerdidaReiterada o none). #}
+{% if reiterada %}
+<div class="aviso-reiterada" role="note">
+  <span class="insignia insignia-reiterada">Pérdida reiterada</span>
+  <span>
+    En rojo en el corte 1 ({{ reiterada.corte_1.nombre_motivo | lower }}, {{ reiterada.corte_1.nombre_estado | lower }})
+    y en el corte 2 ({{ reiterada.corte_2.nombre_motivo | lower }}, {{ reiterada.corte_2.nombre_estado | lower }})
+    de esta asignatura.
+  </span>
+</div>
+{% endif %}

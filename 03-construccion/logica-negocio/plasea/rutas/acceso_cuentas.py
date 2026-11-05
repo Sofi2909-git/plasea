@@ -52,7 +52,7 @@ MENSAJE_SOLICITUD_ENVIADA = (
 @blueprint.get("/")
 def raiz() -> Any:
     """Envía a la página de inicio del rol o al inicio de sesión."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01
     if g.get("usuario") is not None:
         return redirect(url_for("acceso_cuentas.inicio"))
@@ -62,7 +62,7 @@ def raiz() -> Any:
 @blueprint.route("/iniciar-sesion", methods=["GET", "POST"])
 def iniciar_sesion() -> Any:
     """Formulario de inicio de sesión con correo y contraseña."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01 / RF-05
     if g.get("usuario") is not None:
         return redirect(url_for("acceso_cuentas.inicio"))
@@ -89,7 +89,7 @@ def iniciar_sesion() -> Any:
 @blueprint.post("/cerrar-sesion")
 def cerrar_sesion() -> Any:
     """Cierra la sesión activa (RF-03)."""
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-03
     sesiones.cerrar_sesion(session.get(CLAVE_SESION))
     session.clear()
@@ -101,7 +101,7 @@ def cerrar_sesion() -> Any:
 @login_requerido
 def inicio() -> Any:
     """Página de inicio del rol del usuario (RF-01)."""
-    # Responsable: Andrés Camilo Anaya García
+    # Responsable: Sofi Celmar Galvis
     # RF-01
     return render_template("acceso/inicio.html")
 
@@ -114,7 +114,7 @@ def inicio() -> Any:
 @blueprint.route("/recuperar-contrasena", methods=["GET", "POST"])
 def recuperar_contrasena() -> Any:
     """Solicitud del enlace de restablecimiento (RF-06)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06
     formulario = FormularioSolicitudRestablecimiento()
     if formulario.validate_on_submit():
@@ -150,7 +150,7 @@ def restablecer_contrasena(token: str) -> Any:
 @blueprint.route("/activar-cuenta/<token>", methods=["GET", "POST"])
 def activar_cuenta(token: str) -> Any:
     """Activación de la cuenta y definición de la contraseña inicial (RF-09)."""
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-09
     return _formulario_desde_enlace(
         token,
@@ -201,7 +201,7 @@ def _formulario_desde_enlace(
 
 def _opciones_rol() -> list[tuple[str, str]]:
     """Opciones del selector de rol."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08 / RF-10
     return [("", "Seleccione un rol")] + [
         (rol.codigo, rol.nombre) for rol in cuentas.listar_roles()
@@ -210,7 +210,7 @@ def _opciones_rol() -> list[tuple[str, str]]:
 
 def _datos_formulario(formulario: FormularioCuenta) -> cuentas.DatosCuenta:
     """Convierte el formulario en los datos que recibe el servicio."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08 / RF-10
     return cuentas.DatosCuenta(
         nombre_completo=formulario.nombre_completo.data or "",
@@ -223,7 +223,7 @@ def _datos_formulario(formulario: FormularioCuenta) -> cuentas.DatosCuenta:
 @rol_requerido(cuentas.ROL_ADMINISTRADOR)
 def lista_cuentas() -> Any:
     """Listado de usuarios con filtros por rol y estado y búsqueda (RF-12)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-12
     filtros = {
         "rol": request.args.get("rol", ""),
@@ -250,7 +250,7 @@ def lista_cuentas() -> Any:
 @rol_requerido(cuentas.ROL_ADMINISTRADOR)
 def lista_cuentas_nueva() -> Any:
     """Creación de una cuenta con envío del enlace de activación (RF-08)."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08
     formulario = FormularioCuenta()
     formulario.rol.choices = _opciones_rol()
@@ -320,7 +320,7 @@ def lista_cuentas_editar(usuario_id: int) -> Any:
 @rol_requerido(cuentas.ROL_ADMINISTRADOR)
 def lista_cuentas_estado(usuario_id: int, accion: str) -> Any:
     """Activa, desactiva, bloquea o desbloquea una cuenta (RF-11)."""
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-11
     if accion not in cuentas.ACCIONES_ESTADO:
         abort(404)
@@ -338,7 +338,7 @@ def lista_cuentas_estado(usuario_id: int, accion: str) -> Any:
 @rol_requerido(cuentas.ROL_ADMINISTRADOR)
 def lista_cuentas_reenviar(usuario_id: int) -> Any:
     """Envía un enlace de activación nuevo a una cuenta pendiente (RF-08)."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08
     try:
         usuario = cuentas.reenviar_activacion(usuario_id, g.usuario.id)
@@ -351,7 +351,7 @@ def lista_cuentas_reenviar(usuario_id: int) -> Any:
 
 def _volver_a_lista() -> str:
     """Regresa al listado conservando filtros si la petición los trae."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-12
     return destino_seguro(request.form.get("volver")) or url_for(
         "acceso_cuentas.lista_cuentas"

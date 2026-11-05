@@ -1,0 +1,28 @@
+{# Estudiantes con nota registrada frente al total de inscritos, por corte (RF-66 y RF-67).
+   Requiere: datos (ReporteCurso) y gid (sufijo único). Muestra el estado de cada corte y su límite de carga. #}
+<figure class="grafico" aria-labelledby="av-titulo-{{ gid }}">
+  <figcaption id="av-titulo-{{ gid }}" class="visually-hidden">Estudiantes con nota registrada frente al total de inscritos, por corte</figcaption>
+  <ul class="barras barras-avance">
+    {% for a in datos.avances %}
+      <li class="barra-fila{% if datos.corte and a.corte.id == datos.corte.id %} barra-fila-activa{% endif %}">
+        <span class="barra-etiqueta">
+          Corte {{ a.corte.numero }}
+          <span class="insignia insignia-corte-{{ a.estado }} d-block mt-1">{{ a.nombre_estado }}</span>
+          <span class="texto-secundario small d-block fw-normal">Carga hasta {{ a.corte.limite_carga | fecha }}</span>
+        </span>
+        {% if a.iniciado and a.inscritos %}
+          <span class="barra-pista" role="img" aria-label="Corte {{ a.corte.numero }}: {{ a.con_nota }} de {{ a.inscritos }} estudiantes con nota registrada">
+            <span class="barra barra-inscritos" data-ancho="{{ a.porcentaje | round(2) }}"></span>
+          </span>
+          <span class="barra-valor cifra-tabular"><strong>{{ a.con_nota }}</strong> de {{ a.inscritos }} <span class="texto-secundario">{{ a.porcentaje | decimal(1) }} %</span></span>
+        {% elif not a.iniciado %}
+          <span class="barra-pista barra-vacia">Aún no inicia ({{ a.corte.fecha_inicio | fecha }})</span>
+          <span class="barra-valor"></span>
+        {% else %}
+          <span class="barra-pista barra-vacia">Sin estudiantes inscritos</span>
+          <span class="barra-valor"></span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</figure>

@@ -147,7 +147,7 @@ def _registrar_comandos(app: Flask) -> None:
     La carpeta ``scripts`` no es un paquete importable (su ruta tiene guion), por
     eso el módulo se carga desde su archivo.
     """
-    # Responsable: Sofi Celmar Galvis (Paso 0, base común)
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     if not RUTA_SCRIPT_SEED.is_file():
         registro.warning(

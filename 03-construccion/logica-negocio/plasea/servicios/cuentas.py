@@ -60,7 +60,7 @@ class DatosCuenta:
 
 def listar_roles() -> list[Rol]:
     """Devuelve los 3 roles fijos ordenados por nombre."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-12
     return list(db.session.scalars(select(Rol).order_by(Rol.nombre)))
 
@@ -76,7 +76,7 @@ def listar_usuarios(
     La búsqueda no distingue mayúsculas ni tildes porque la columna usa la
     intercalación ``utf8mb4_spanish_ci`` de la base de datos (RF-12).
     """
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-12
     consulta = select(Usuario).options(joinedload(Usuario.rol))
     if rol_codigo in ROLES_VALIDOS:
@@ -99,7 +99,7 @@ def listar_usuarios(
 
 def obtener_usuario(usuario_id: int) -> Usuario:
     """Devuelve la cuenta o lanza ``ErrorNegocio`` si no existe."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-10 / RF-11
     usuario = db.session.get(Usuario, usuario_id)
     if usuario is None:
@@ -109,7 +109,7 @@ def obtener_usuario(usuario_id: int) -> Usuario:
 
 def _normalizar(datos: DatosCuenta) -> DatosCuenta:
     """Limpia y valida los datos de una cuenta en el servidor."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08 / RF-10
     nombre = " ".join(datos.nombre_completo.split())
     correo = datos.correo.strip().lower()
@@ -124,7 +124,7 @@ def _normalizar(datos: DatosCuenta) -> DatosCuenta:
 
 def _rol_por_codigo(codigo: str) -> Rol:
     """Devuelve el rol con el código indicado."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-02
     rol = db.session.scalar(select(Rol).where(Rol.codigo == codigo))
     if rol is None:
@@ -134,7 +134,7 @@ def _rol_por_codigo(codigo: str) -> Rol:
 
 def _verificar_correo_disponible(correo: str, excluir_id: Optional[int] = None) -> None:
     """Verifica que el correo no sea de otra cuenta (sin distinguir mayúsculas)."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08 / RF-10
     consulta = select(Usuario.id).where(Usuario.correo == correo)
     if excluir_id is not None:
@@ -166,7 +166,7 @@ def crear_cuenta(datos: DatosCuenta, actor_id: int) -> Usuario:
     Raises:
         ErrorNegocio: datos inválidos o correo ya registrado.
     """
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08
     datos = _normalizar(datos)
     try:
@@ -201,7 +201,7 @@ def crear_cuenta(datos: DatosCuenta, actor_id: int) -> Usuario:
 
 def reenviar_activacion(usuario_id: int, actor_id: int) -> Usuario:
     """Genera un enlace de activación nuevo para una cuenta pendiente (RF-08)."""
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08
     try:
         usuario = obtener_usuario(usuario_id)
@@ -297,7 +297,7 @@ def cambiar_estado(usuario_id: int, accion: str, actor_id: int) -> Usuario:
         ErrorNegocio: acción no permitida para el estado actual, sobre la propia
             cuenta o sobre el último administrador activo.
     """
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-11
     if accion not in ACCIONES_ESTADO:
         raise ErrorNegocio("Acción no válida.")

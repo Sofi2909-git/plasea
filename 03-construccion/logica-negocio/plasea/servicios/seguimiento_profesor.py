@@ -121,6 +121,7 @@ def _valores_guardados(corte: Corte, curso_id: int) -> dict[int, dict]:
     # RF-34
     return {
         alerta.inscripcion_id: {
+            "configuracion_alerta_id": alerta.configuracion_alerta_id,
             "estado_alerta": alerta.estado_alerta,
             "motivo_nota": alerta.motivo_nota,
             "motivo_inasistencia": alerta.motivo_inasistencia,
@@ -138,6 +139,28 @@ def _valores_guardados(corte: Corte, curso_id: int) -> dict[int, dict]:
     }
 
 
+def valores_del_corte(curso: Curso, corte: Corte) -> tuple[dict[int, dict], bool]:
+    """Valores de alerta de cada inscrito del curso en el corte (RF-34, RF-66).
+
+    Corte cerrado con alertas guardadas: las definitivas. En otro caso se
+    calculan al momento con ``alertas.evaluar`` y son provisionales.
+
+    Returns:
+        (valores por inscripción, indicador de si son definitivos).
+    """
+    # Responsable: Andrés Camilo Anaya García
+    # RF-34
+    definitivo = corte.cerrado_en is not None
+    valores = _valores_guardados(corte, curso.id) if definitivo else {}
+    if not valores:
+        definitivo = False
+        valores = {
+            inscripcion_id: datos
+            for inscripcion_id, _, datos in alertas.evaluar(corte, [curso.id])
+        }
+    return valores, definitivo
+
+
 def seguimiento_curso(curso: Curso, corte: Corte) -> SeguimientoCurso:
     """Situación de cada inscrito del curso en el corte, ordenada por severidad.
 
@@ -148,14 +171,7 @@ def seguimiento_curso(curso: Curso, corte: Corte) -> SeguimientoCurso:
     # RF-34
     cortes = sorted(curso.periodo_academico.cortes, key=lambda c: c.numero)
     mostrados = [c for c in cortes if c.numero <= corte.numero]
-    definitivo = corte.cerrado_en is not None
-    valores = _valores_guardados(corte, curso.id) if definitivo else {}
-    if not valores:
-        definitivo = False
-        valores = {
-            inscripcion_id: datos
-            for inscripcion_id, _, datos in alertas.evaluar(corte, [curso.id])
-        }
+    valores, definitivo = valores_del_corte(curso, corte)
 
     notas: dict[tuple[int, int], Decimal] = {
         (inscripcion_id, corte_id): nota

@@ -10,7 +10,7 @@
 {% if not corte %}
   <section class="tarjeta estado-vacio"><h2>No hay un período en curso con cortes</h2></section>
 {% else %}
-<form method="get" class="tarjeta tarjeta-cuerpo mb-4" aria-label="Filtrar resultados">
+<form method="get" class="tarjeta tarjeta-cuerpo mb-4" aria-label="Filtrar resultados" data-autoenviar>
   <div class="barra-filtros filtros-alertas">
     <div>
       <label class="form-label" for="r-periodo">Período</label>
@@ -66,7 +66,8 @@
         <thead>
           <tr><th scope="col">Asignatura</th><th scope="col">Curso</th><th scope="col">Profesor</th>
             <th scope="col" class="text-end">Inscritos</th><th scope="col" class="text-end">Aprobados</th>
-            <th scope="col" class="text-end">En alerta</th><th scope="col" class="text-end">Perdidos</th></tr>
+            <th scope="col" class="text-end">En alerta</th><th scope="col" class="text-end">Perdidos</th>
+            <th scope="col">Documento</th></tr>
         </thead>
         <tbody>
           {% for f in filas %}
@@ -78,6 +79,7 @@
               <td class="text-end cifra-tabular">{{ f.aprobados }}<span class="d-block texto-secundario">{{ pct(f, f.aprobados) }}</span></td>
               <td class="text-end cifra-tabular"><a href="{{ url_for('alertas_analitica.lista', periodo=periodo.id, corte=corte.numero, curso=f.curso_id) }}">{{ f.en_alerta }}</a><span class="d-block texto-secundario">{{ pct(f, f.en_alerta) }}</span></td>
               <td class="text-end cifra-tabular {{ 'valor-critico' if f.perdidos }}">{{ f.perdidos }}<span class="d-block texto-secundario fw-normal">{{ pct(f, f.perdidos) }}</span></td>
+              <td><a class="btn btn-outline-primary btn-sm" href="{{ url_for('exportacion.estadistica_curso_imprimible', curso_id=f.curso_id) }}" aria-label="Exportar PDF de la estadística de {{ f.asignatura }} {{ f.curso }}">Exportar PDF</a></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -88,6 +90,7 @@
             <td class="text-end cifra-tabular">{{ total.aprobados }}<span class="d-block texto-secundario">{{ pct(total, total.aprobados) }}</span></td>
             <td class="text-end cifra-tabular">{{ total.en_alerta }}<span class="d-block texto-secundario">{{ pct(total, total.en_alerta) }}</span></td>
             <td class="text-end cifra-tabular">{{ total.perdidos }}<span class="d-block texto-secundario">{{ pct(total, total.perdidos) }}</span></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -96,5 +99,15 @@
     <div class="estado-vacio"><h2>No hay resultados para este corte</h2><p>Aparecen cuando los profesores envían el registro y se calculan las alertas.</p></div>
   {% endif %}
 </section>
+
+<section class="tarjeta mt-4" aria-labelledby="titulo-distribucion">
+  <div class="tarjeta-cuerpo">
+    <h2 id="titulo-distribucion" class="titulo-seccion mb-1">Estudiantes por estado y motivo en cada corte de {{ periodo.identificador }}</h2>
+    <p class="texto-secundario">Se actualiza al cambiar los filtros de período, asignatura, curso y profesor.</p>
+    {% set gid = "resultados" %}{% include "alertas/_grafica_distribucion.html" %}
+  </div>
+</section>
 {% endif %}
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-"""Exportaciones a CSV (RF-58, RF-59).
+"""Exportaciones a CSV (RF-58, RF-59) y registro de los PDF (RF-60, RF-65, RF-67).
 
 Formato: separador punto y coma, UTF-8 con BOM (Excel en Windows lo abre con
 tildes) y coma decimal. Todo texto que empiece con =, +, -, @, tabulador o
@@ -51,14 +51,24 @@ def generar_csv(encabezado: list[str], filas: Iterable[Iterable[Any]]) -> bytes:
     return ("﻿" + salida.getvalue()).encode("utf-8")
 
 
-def _registrar(actor_id: int, detalle: str) -> None:
-    """Deja la exportación en la bitácora y confirma."""
+def _registrar(
+    actor_id: int,
+    detalle: str,
+    entidad: str = "exportaciones",
+    entidad_id: Optional[int] = None,
+) -> None:
+    """Deja la exportación en la bitácora y confirma.
+
+    Los PDF indican el objeto exportado (``cursos`` o ``estudiantes``) y su
+    identificador (RF-61); los CSV se registran como ``exportaciones``.
+    """
     # Responsable: Wilson D'Alessandro Saavedra Rolón
     # RF-58
     bitacora.registrar_evento(
         EVENTO_EXPORTACION,
         usuario_id=actor_id,
-        entidad="exportaciones",
+        entidad=entidad,
+        entidad_id=entidad_id,
         detalle=detalle,
     )
     db.session.commit()
@@ -206,8 +216,52 @@ def csv_resultados(
     return f"resultados_{identificador}_corte{corte.numero}.csv", contenido, len(filas)
 
 
-def registrar_vista_imprimible(estudiante_codigo: str, actor_id: int) -> None:
-    """Deja en la bitácora la generación de la vista imprimible (RF-60)."""
+def registrar_vista_imprimible(
+    estudiante_codigo: str, actor_id: int, estudiante_id: Optional[int] = None
+) -> None:
+    """Deja en la bitácora la generación de la vista imprimible (RF-60, RF-61)."""
     # Responsable: Wilson D'Alessandro Saavedra Rolón
     # RF-60
-    _registrar(actor_id, f"Vista imprimible del histórico de {estudiante_codigo}")
+    _registrar(
+        actor_id,
+        f"Vista imprimible del histórico de {estudiante_codigo}",
+        "estudiantes" if estudiante_id else "exportaciones",
+        estudiante_id,
+    )
+
+
+def _nombre_curso(curso: Curso) -> str:
+    """Asignatura, curso y período, para el detalle de la bitácora."""
+    # Responsable: Sofi Celmar Galvis
+    # RF-61
+    return (
+        f"{curso.asignatura.codigo} {curso.codigo} "
+        f"{curso.periodo_academico.identificador}"
+    )
+
+
+def registrar_pdf_curso_auditor(curso: Curso, actor_id: int) -> None:
+    """Deja en la bitácora el PDF de la estadística del curso (RF-65, RF-61)."""
+    # Responsable: Sofi Celmar Galvis
+    # RF-65
+    _registrar(
+        actor_id,
+        f"Vista imprimible (PDF) de la estadística del curso {_nombre_curso(curso)}",
+        "cursos",
+        curso.id,
+    )
+
+
+def registrar_pdf_curso_profesor(
+    curso: Curso, corte: Optional[Corte], actor_id: int
+) -> None:
+    """Deja en la bitácora el PDF del reporte del curso del profesor (RF-67, RF-61)."""
+    # Responsable: Sofi Celmar Galvis
+    # RF-67
+    _registrar(
+        actor_id,
+        f"Vista imprimible (PDF) del reporte del curso {_nombre_curso(curso)}"
+        + (f" corte {corte.numero}" if corte else ""),
+        "cursos",
+        curso.id,
+    )

@@ -3,6 +3,8 @@
  * - Medidor de inasistencia: aplica anchos y posiciones desde atributos data-*
  *   (la política de contenido no permite estilos en línea en el HTML).
  * - Vista imprimible: botón que abre el diálogo de impresión del navegador.
+ * - Filtros que actualizan la pantalla: <form data-autoenviar> envía el
+ *   formulario al cambiar un filtro (RF-48); sin JavaScript queda el botón.
  */
 (() => {
   "use strict";
@@ -21,6 +23,13 @@
     });
     document.querySelectorAll("[data-imprimir]").forEach((boton) => {
       boton.addEventListener("click", () => window.print());
+    });
+    document.querySelectorAll("form[data-autoenviar]").forEach((formulario) => {
+      formulario.addEventListener("change", (evento) => {
+        if (evento.target instanceof HTMLSelectElement) {
+          formulario.submit();
+        }
+      });
     });
   });
 })();

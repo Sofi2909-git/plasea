@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Reporte {{ curso.asignatura.codigo }} {{ curso.codigo }}{% if corte %} · corte {{ corte.numero }}{% endif %}{% endblock %}
+{% block clase_cuerpo %}pagina-impresion{% endblock %}
+{% block cuerpo %}
+{% set titulo_documento = "Estadística de reporte del curso" %}{% include "exportacion/_encabezado_impresion.html" %}
+{% set estado_corte = datos.avance %}
+<main id="contenido" class="hoja-impresion hoja-impresion-curso" tabindex="-1">
+  <dl class="datos-impresion">
+    <div><dt>Período</dt><dd>{{ curso.periodo_academico.identificador }}</dd></div>
+    <div><dt>Asignatura</dt><dd>{{ curso.asignatura.codigo }} · {{ curso.asignatura.nombre }}</dd></div>
+    <div><dt>Curso</dt><dd>{{ curso.codigo }}</dd></div>
+    <div><dt>Profesor</dt><dd>{{ curso.profesor.nombre_completo }}</dd></div>
+    {% if corte %}
+    <div><dt>Corte</dt><dd>{{ corte.numero }} · {{ estado_corte.nombre_estado if estado_corte else "" }}</dd></div>
+    <div><dt>Estado de las alertas</dt><dd>{{ "Definitivo" if datos.definitivo else "Provisional" }}</dd></div>
+    {% endif %}
+    <div><dt>Fecha de generación</dt><dd>{{ generado_en | fecha_hora }}</dd></div>
+    <div><dt>Generado por</dt><dd>{{ generado_por }}</dd></div>
+  </dl>
+
+  <section class="semestre-impresion" aria-labelledby="imp-avance">
+    <h2 id="imp-avance">Notas registradas por corte <span>estudiantes con nota frente al total de inscritos</span></h2>
+    {% set gid = "avance" %}{% include "graficos/_avance_notas.html" %}
+  </section>
+
+  {% if corte %}
+  <section class="semestre-impresion" aria-labelledby="imp-estados">
+    <h2 id="imp-estados">Estado de los estudiantes en el corte {{ corte.numero }}</h2>
+    {% set gid = "estados" %}{% include "graficos/_estados_corte.html" %}
+  </section>
+
+  <section class="semestre-impresion semestre-impresion-lista" aria-labelledby="imp-lista">
+    <h2 id="imp-lista">Estudiantes <span>{{ datos.filas | length }} inscrito(s); primero rojo, luego amarillo</span></h2>
+    {% if datos.filas %}
+      {% set detalle_ritmo = false %}{% include "graficos/_tabla_reporte.html" %}
+    {% else %}
+      <p>El curso no tiene estudiantes inscritos.</p>
+    {% endif %}
+  </section>
+  {% else %}
+  <p>Todavía no hay un corte iniciado en el período: la lista de estudiantes aparece cuando inicia el primer corte.</p>
+  {% endif %}
+
+  <footer class="pie-impresion">
+    Generado el {{ generado_en | fecha_hora }} por {{ generado_por }}.
+    {% if corte %}Estado {{ "definitivo" if datos.definitivo else "provisional" }} del corte {{ corte.numero }}
+    ({{ estado_corte.nombre_estado | lower if estado_corte else "" }} a la fecha de generación).{% endif %}
+    Prototipo académico con datos ficticios.
+  </footer>
+</main>
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
+{% endblock %}

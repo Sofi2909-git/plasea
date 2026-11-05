@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block titulo %}Estadística {{ curso.asignatura.codigo }} {{ curso.codigo }} · {{ curso.periodo_academico.identificador }}{% endblock %}
+{% block clase_cuerpo %}pagina-impresion{% endblock %}
+{% block cuerpo %}
+{% set titulo_documento = "Estadística del curso" %}{% include "exportacion/_encabezado_impresion.html" %}
+<main id="contenido" class="hoja-impresion hoja-impresion-curso" tabindex="-1">
+  <dl class="datos-impresion">
+    <div><dt>Período</dt><dd>{{ curso.periodo_academico.identificador }}</dd></div>
+    <div><dt>Asignatura</dt><dd>{{ curso.asignatura.codigo }} · {{ curso.asignatura.nombre }}</dd></div>
+    <div><dt>Curso</dt><dd>{{ curso.codigo }}</dd></div>
+    <div><dt>Profesor</dt><dd>{{ curso.profesor.nombre_completo }}</dd></div>
+    <div><dt>Fecha de generación</dt><dd>{{ generado_en | fecha_hora }}</dd></div>
+    <div><dt>Generado por</dt><dd>{{ generado_por }}</dd></div>
+  </dl>
+
+  <section class="semestre-impresion" aria-labelledby="imp-cifras">
+    <h2 id="imp-cifras">Inscritos, aprobados, en alerta y perdidos por corte</h2>
+    <table class="table tabla-plasea tabla-historico">
+      <caption class="visually-hidden">Cifras del curso por corte</caption>
+      <thead>
+        <tr>
+          <th scope="col">Corte</th><th scope="col">Estado</th>
+          <th scope="col" class="text-end">Inscritos</th>
+          <th scope="col" class="text-end">Aprobados</th>
+          <th scope="col" class="text-end">En alerta</th>
+          <th scope="col" class="text-end">Perdidos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for corte, t in d.por_corte %}
+          <tr>
+            <th scope="row">Corte {{ corte.numero }}</th>
+            <td>{{ "Definitivo" if corte.cerrado_en else "Provisional" }}</td>
+            <td class="text-end cifra-tabular">{{ t.inscritos }}</td>
+            {% for valor in (t.aprobados, t.en_alerta, t.perdidos) %}
+              <td class="text-end cifra-tabular">{{ valor }}{% if t.inscritos %}<span class="d-block texto-secundario">{{ t.porcentaje(valor) | decimal(1) }} %</span>{% endif %}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="texto-secundario small mb-0">Las cifras son las de la pantalla de resultados por asignatura y curso. Un corte sin estudiantes aún no tiene alertas calculadas.</p>
+  </section>
+
+  <section class="semestre-impresion" aria-labelledby="imp-grafica">
+    <h2 id="imp-grafica">Gráfica por corte: estado y motivo</h2>
+    {% set gid = "curso" %}{% set distribucion = d.distribucion %}{% include "alertas/_grafica_distribucion.html" %}
+  </section>
+
+  <section class="semestre-impresion" aria-labelledby="imp-reiterada">
+    <h2 id="imp-reiterada">Estudiantes con pérdida reiterada <span>{{ d.reiteradas | length }} estudiante(s)</span></h2>
+    {% if d.reiteradas %}
+      <table class="table tabla-plasea tabla-historico">
+        <caption class="visually-hidden">Estudiantes en rojo en los cortes 1 y 2 del curso</caption>
+        <thead>
+          <tr>
+            <th scope="col">Código</th><th scope="col">Estudiante</th>
+            <th scope="col">Corte 1</th><th scope="col">Corte 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in d.reiteradas %}
+            <tr>
+              <td class="cifra-tabular">{{ p.codigo }}</td>
+              <td class="fw-semibold">{{ p.nombres }}</td>
+              {% for c in p.cortes %}
+                <td><span class="semaforo semaforo-roja">Roja</span><span class="motivo-alerta">{{ c.nombre_motivo }} · {{ c.nombre_estado }}</span></td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Ningún estudiante del curso está en rojo en los cortes 1 y 2 de la misma asignatura.</p>
+    {% endif %}
+  </section>
+
+  <footer class="pie-impresion">
+    Generado el {{ generado_en | fecha_hora }} por {{ generado_por }}. Prototipo académico con datos ficticios.
+  </footer>
+</main>
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
+{% endblock %}

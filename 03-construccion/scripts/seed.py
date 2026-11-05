@@ -188,7 +188,7 @@ class ErrorSeed(Exception):
 @with_appcontext
 def comando_seed() -> None:
     """Crea los 4 usuarios predeterminados y los datos académicos mínimos."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     try:
         resumen = ejecutar_seed()
@@ -206,7 +206,7 @@ def comando_seed() -> None:
 
 def ejecutar_seed() -> dict[str, int]:
     """Inserta los datos que falten y devuelve cuántos registros nuevos hubo."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     _verificar_datos_iniciales()
     resumen = {
@@ -225,7 +225,7 @@ def ejecutar_seed() -> dict[str, int]:
 
 def _verificar_datos_iniciales() -> None:
     """Comprueba que bd_datos_iniciales.sql ya se ejecutó."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     codigos_rol = {fila[3] for fila in USUARIOS_PREDETERMINADOS}
     existentes = set(
@@ -249,7 +249,7 @@ def _verificar_datos_iniciales() -> None:
 
 def _programa() -> ProgramaAcademico | None:
     """Devuelve el programa académico del alcance."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     return db.session.scalar(
         select(ProgramaAcademico).where(ProgramaAcademico.nombre == PROGRAMA)
@@ -258,7 +258,7 @@ def _programa() -> ProgramaAcademico | None:
 
 def _estado_activo() -> EstadoEstudiante | None:
     """Devuelve el estado 'activo' del catálogo."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     return db.session.scalar(
         select(EstadoEstudiante).where(EstadoEstudiante.codigo == "activo")
@@ -267,7 +267,7 @@ def _estado_activo() -> EstadoEstudiante | None:
 
 def _usuario_por_correo(correo: str) -> Usuario | None:
     """Busca un usuario por correo sin distinguir mayúsculas."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     return db.session.scalar(
         select(Usuario).where(func.lower(Usuario.correo) == correo.lower())
@@ -276,7 +276,7 @@ def _usuario_por_correo(correo: str) -> Usuario | None:
 
 def _crear_usuarios() -> int:
     """Crea los 4 usuarios predeterminados si no existen (cuentas activas)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     roles = {rol.codigo: rol for rol in db.session.scalars(select(Rol))}
     nuevos = 0
@@ -300,7 +300,7 @@ def _crear_usuarios() -> int:
 
 def _obtener_o_crear_periodo() -> tuple[PeriodoAcademico, bool]:
     """Obtiene o crea el período 2026-2; lo marca en curso si no hay otro."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     periodo = db.session.scalar(
         select(PeriodoAcademico).where(
@@ -322,7 +322,7 @@ def _obtener_o_crear_periodo() -> tuple[PeriodoAcademico, bool]:
 
 def _crear_cortes(periodo: PeriodoAcademico) -> int:
     """Crea los 3 cortes del período (30 %, 30 % y 40 %)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     existentes = {corte.numero for corte in periodo.cortes}
     nuevos = 0
@@ -347,7 +347,7 @@ def _crear_cortes(periodo: PeriodoAcademico) -> int:
 
 def _crear_festivos(periodo: PeriodoAcademico) -> int:
     """Registra los festivos del período."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     existentes = {festivo.fecha for festivo in periodo.festivos}
     nuevos = 0
@@ -362,7 +362,7 @@ def _crear_festivos(periodo: PeriodoAcademico) -> int:
 
 def _crear_asignaturas() -> int:
     """Crea las asignaturas mínimas del programa."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     programa = _programa()
     nuevos = 0
@@ -389,7 +389,7 @@ def _crear_asignaturas() -> int:
 
 def _crear_cursos(periodo: PeriodoAcademico) -> tuple[int, int]:
     """Crea un curso por asignatura con su profesor y su horario semanal."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     cursos_nuevos = 0
     bloques_nuevos = 0
@@ -430,7 +430,7 @@ def _crear_cursos(periodo: PeriodoAcademico) -> tuple[int, int]:
 
 def _crear_estudiantes() -> int:
     """Crea los estudiantes ficticios con su estado inicial 'activo'."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     programa = _programa()
     activo = _estado_activo()
@@ -465,7 +465,7 @@ def _crear_estudiantes() -> int:
 
 def _fecha_inicio_cohorte(periodo_ingreso: str) -> dt.date:
     """Fecha efectiva del estado inicial: 1 de febrero o 1 de agosto del ingreso."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     anio, semestre = periodo_ingreso.split("-")
     return dt.date(int(anio), 2 if semestre == "1" else 8, 1)
@@ -473,7 +473,7 @@ def _fecha_inicio_cohorte(periodo_ingreso: str) -> dt.date:
 
 def _crear_inscripciones(periodo: PeriodoAcademico) -> tuple[int, int]:
     """Matricula a los estudiantes en el período y los inscribe en todos los cursos."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Yeferson Fabián Jaimes
     # RF-25
     cursos = list(
         db.session.scalars(

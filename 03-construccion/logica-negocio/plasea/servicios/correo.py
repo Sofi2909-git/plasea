@@ -40,7 +40,7 @@ def enviar_correo(destinatario: str, asunto: str, cuerpo: str) -> None:
     demorar la respuesta (así el tiempo de respuesta no revela si el correo
     existe, RF-06).
     """
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06 / RF-08
     configuracion = current_app.config
     mensaje = EmailMessage()
@@ -117,7 +117,7 @@ def _enviar_resend(mensaje: EmailMessage, clave_api: str) -> None:
 
 def _enviar_smtp(mensaje: EmailMessage, datos: dict[str, Any]) -> None:
     """Entrega el mensaje al servidor SMTP. Registra el fallo sin propagarlo."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06 / RF-08
     try:
         with smtplib.SMTP(

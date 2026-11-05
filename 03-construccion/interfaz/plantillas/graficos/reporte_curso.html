@@ -1,0 +1,76 @@
+{% extends "app.html" %}
+{% block titulo %}Estadística de reporte · {{ curso.asignatura.codigo }} {{ curso.codigo }}{% endblock %}
+{% block contenido %}
+{% set miga = "Estadística de reporte" %}{% include "registro/_encabezado_curso.html" %}
+<div class="encabezado-pagina">
+  <div>
+    <h1>Estadística de reporte</h1>
+    <p>{{ curso.asignatura.nombre }} · {{ curso.codigo }} · período {{ curso.periodo_academico.identificador }}. Cuántos de sus estudiantes ya tienen nota registrada y cómo va cada uno.</p>
+  </div>
+  <div class="acciones-curso">
+    {% if corte %}<a class="btn btn-primary" href="{{ url_for('exportacion.reporte_curso_imprimible', curso_id=curso.id, corte=corte.numero) }}">Exportar PDF</a>{% endif %}
+    <a class="btn btn-outline-primary" href="{{ url_for('registro_asistencia_notas.seguimiento', curso_id=curso.id, corte=corte.numero if corte else None) }}">Cómo van mis estudiantes</a>
+  </div>
+</div>
+
+<section class="tarjeta mb-4" aria-labelledby="titulo-avance">
+  <div class="tarjeta-cuerpo pb-0">
+    <h2 id="titulo-avance" class="titulo-seccion mb-1">Notas registradas por corte</h2>
+    <p class="texto-secundario">Estudiantes con nota registrada frente al total de inscritos del curso ({{ datos.avances[0].inscritos if datos.avances else 0 }}). La nota se cuenta desde que se guarda, aunque el corte aún no se haya enviado.</p>
+  </div>
+  <div class="tarjeta-cuerpo">
+    {% set gid = "pantalla" %}{% include "graficos/_avance_notas.html" %}
+  </div>
+</section>
+
+{% if not corte %}
+  <section class="tarjeta estado-vacio">
+    <h2>Todavía no hay estudiantes para evaluar</h2>
+    <p>La lista aparece cuando inicia el primer corte del período.</p>
+  </section>
+{% else %}
+<section class="tarjeta mb-4" aria-labelledby="titulo-estados">
+  <div class="tarjeta-cuerpo pb-0">
+    <div class="grafico-cabecera">
+      <div>
+        <h2 id="titulo-estados" class="titulo-seccion mb-1">Estado de los estudiantes en el corte {{ corte.numero }}
+          <span class="insignia {{ 'insignia-corte-cerrado' if datos.definitivo else 'insignia-info' }} align-middle">{{ "Definitivo" if datos.definitivo else "Provisional" }}</span></h2>
+        <p class="texto-secundario mb-0">{{ "Corte cerrado el " ~ (corte.cerrado_en | fecha_hora) ~ "." if datos.definitivo else "Provisional: se recalcula al guardar una nota, registrar asistencia o corregir, y es definitivo cuando se cierra el corte." }}</p>
+      </div>
+      <nav class="selector-cortes" aria-label="Elegir corte">
+        {% for a in datos.avances %}
+          {% if a.iniciado %}
+            <a href="{{ url_for('graficos_tablero.reporte_curso', curso_id=curso.id, corte=a.corte.numero) }}" class="{{ 'activo' if a.corte.id == corte.id }}" {% if a.corte.id == corte.id %}aria-current="page"{% endif %}>Corte {{ a.corte.numero }}</a>
+          {% else %}
+            <span class="desactivado" aria-disabled="true" title="Inicia el {{ a.corte.fecha_inicio | fecha }}">Corte {{ a.corte.numero }}</span>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </div>
+  <div class="tarjeta-cuerpo">
+    {% set gid = "pantalla" %}{% include "graficos/_estados_corte.html" %}
+    <p class="texto-secundario small mt-3 mb-0">Rojo: nota del corte menor que 3,0, inasistencia acumulada sobre el 30 % o nota requerida mayor que 5,0. Amarillo: nota entre 3,0 y 3,4, o inasistencia acumulada o ritmo desde el 20 %. Quien no tiene nota en el corte se evalúa solo por inasistencia y aparece «Sin nota» si no hay alerta por inasistencia. Los umbrales los configura el Auditor académico.</p>
+  </div>
+</section>
+
+<section class="tarjeta" aria-labelledby="titulo-lista">
+  <div class="tarjeta-cuerpo pb-2">
+    <h2 id="titulo-lista" class="titulo-seccion mb-0">Corte {{ corte.numero }} · {{ datos.filas | length }} estudiante(s)</h2>
+    <p class="texto-secundario mb-0">Primero quienes están en rojo, luego en amarillo. Acumulada: suma de cada nota por el peso de su corte. Inasistencia: horas ausentes sobre las horas totales del curso; ritmo: sobre las horas dictadas a la fecha.</p>
+  </div>
+  {% if datos.filas %}
+    <div class="contenedor-tabla">
+      {% set detalle_ritmo = true %}{% include "graficos/_tabla_reporte.html" %}
+    </div>
+  {% else %}
+    <div class="estado-vacio">
+      <h2>El curso no tiene estudiantes inscritos</h2>
+      <p>El Auditor académico inscribe a los estudiantes en el curso.</p>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
+{% endblock %}

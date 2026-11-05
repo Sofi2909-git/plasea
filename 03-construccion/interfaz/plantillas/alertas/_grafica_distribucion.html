@@ -1,0 +1,75 @@
+{# Distribución de estudiantes por estado y motivo en cada corte (RF-48 y RF-65).
+   Requiere: distribucion (lista de DistribucionCorte) y gid (sufijo único).
+   Verde, amarilla y roja suman las alertas del corte y coinciden con la lista de alertas;
+   los perdidos se cuentan aparte con la regla de la tabla de resultados. #}
+<div class="grafica-distribucion">
+  {% for d in distribucion %}
+    <article class="distribucion-corte" aria-labelledby="dc-{{ gid }}-{{ d.corte.numero }}">
+      <h3 id="dc-{{ gid }}-{{ d.corte.numero }}" class="grafico-titulo-menor">
+        Corte {{ d.corte.numero }}
+        <span class="insignia {{ 'insignia-corte-cerrado' if d.definitivo else 'insignia-info' }} align-middle">{{ "Definitivo" if d.definitivo else "Provisional" }}</span>
+        <span class="texto-secundario fw-normal">{{ d.total }} estudiante(s)-asignatura</span>
+      </h3>
+      {% if d.total %}
+        <ul class="barras barras-detalle">
+          <li class="barra-fila">
+            <span class="barra-etiqueta">Estado</span>
+            <span class="barra-pista barra-pista-apilada" role="img" aria-label="Corte {{ d.corte.numero }}: {{ d.roja.total }} en rojo, {{ d.amarilla.total }} en amarillo y {{ d.verde }} en verde">
+              <span class="barra barra-roja" data-ancho="{{ d.porcentaje(d.roja.total) | round(2) }}"></span>
+              <span class="barra barra-amarilla" data-ancho="{{ d.porcentaje(d.amarilla.total) | round(2) }}"></span>
+              <span class="barra barra-verde" data-ancho="{{ d.porcentaje(d.verde) | round(2) }}"></span>
+            </span>
+            <span class="barra-valor cifra-tabular">{{ d.roja.total }} · {{ d.amarilla.total }} · {{ d.verde }}</span>
+          </li>
+          <li class="barra-fila">
+            <span class="barra-etiqueta">Perdidos</span>
+            <span class="barra-pista" role="img" aria-label="Corte {{ d.corte.numero }}: {{ d.perdidos.total }} perdidos">
+              <span class="barra barra-perdida" data-ancho="{{ d.porcentaje(d.perdidos.total) | round(2) }}"></span>
+            </span>
+            <span class="barra-valor cifra-tabular"><strong>{{ d.perdidos.total }}</strong> <span class="texto-secundario">{{ d.porcentaje(d.perdidos.total) | decimal(1) }} %</span></span>
+          </li>
+        </ul>
+        <div class="contenedor-tabla">
+          <table class="table tabla-plasea tabla-compacta tabla-distribucion">
+            <caption class="visually-hidden">Estudiantes del corte {{ d.corte.numero }} por estado y motivo</caption>
+            <thead>
+              <tr>
+                <th scope="col">Estado</th>
+                <th scope="col" class="text-end">Por nota</th>
+                <th scope="col" class="text-end">Por inasistencia</th>
+                <th scope="col" class="text-end">Por nota e inasistencia</th>
+                <th scope="col" class="text-end">Total</th>
+                <th scope="col" class="text-end">%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><span class="semaforo semaforo-roja">Roja</span></th>
+                <td class="text-end cifra-tabular">{{ d.roja.nota }}</td><td class="text-end cifra-tabular">{{ d.roja.inasistencia }}</td><td class="text-end cifra-tabular">{{ d.roja.ambos }}</td>
+                <td class="text-end cifra-tabular fw-semibold">{{ d.roja.total }}</td><td class="text-end cifra-tabular">{{ d.porcentaje(d.roja.total) | decimal(1) }} %</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="semaforo semaforo-amarilla">Amarilla</span></th>
+                <td class="text-end cifra-tabular">{{ d.amarilla.nota }}</td><td class="text-end cifra-tabular">{{ d.amarilla.inasistencia }}</td><td class="text-end cifra-tabular">{{ d.amarilla.ambos }}</td>
+                <td class="text-end cifra-tabular fw-semibold">{{ d.amarilla.total }}</td><td class="text-end cifra-tabular">{{ d.porcentaje(d.amarilla.total) | decimal(1) }} %</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="semaforo semaforo-verde">Verde</span></th>
+                <td class="text-end texto-secundario">—</td><td class="text-end texto-secundario">—</td><td class="text-end texto-secundario">—</td>
+                <td class="text-end cifra-tabular fw-semibold">{{ d.verde }}</td><td class="text-end cifra-tabular">{{ d.porcentaje(d.verde) | decimal(1) }} %</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="resultado resultado-perdida">Perdidos</span></th>
+                <td class="text-end cifra-tabular">{{ d.perdidos.nota }}</td><td class="text-end cifra-tabular">{{ d.perdidos.inasistencia }}</td><td class="text-end cifra-tabular">{{ d.perdidos.ambos }}</td>
+                <td class="text-end cifra-tabular fw-semibold">{{ d.perdidos.total }}</td><td class="text-end cifra-tabular">{{ d.porcentaje(d.perdidos.total) | decimal(1) }} %</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="texto-secundario mb-0">Sin alertas calculadas en este corte con los filtros elegidos.</p>
+      {% endif %}
+    </article>
+  {% endfor %}
+  <p class="texto-secundario small mb-0">Rojo · amarillo · verde suman todos los estudiantes del corte. «Perdidos» se cuenta aparte, con la misma regla de la tabla de resultados.</p>
+</div>

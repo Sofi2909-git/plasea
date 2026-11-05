@@ -15,6 +15,7 @@
   </div>
   <a class="btn btn-outline-primary" href="{{ url_for('alertas_analitica.historico', estudiante_id=e.id) }}">Histórico académico</a>
 </div>
+{% set reiterada = d.reiterada %}{% include "alertas/_perdida_reiterada.html" %}
 
 {% if not sel %}
   <section class="tarjeta estado-vacio"><h2>Sin alertas calculadas</h2><p>Las alertas se calculan cuando el profesor envía el registro de un corte.</p></section>
@@ -86,6 +87,16 @@
     </div>
   </section>
 </div>
+
+<section class="tarjeta mt-4" aria-labelledby="titulo-grafica">
+  <div class="tarjeta-cuerpo">
+    <h2 id="titulo-grafica" class="titulo-seccion mb-1">Gráfica del estudiante en la asignatura</h2>
+    <p class="texto-secundario">Notas de cada corte, nota acumulada, nota requerida e inasistencia, con el motivo de la alerta en cada corte. Se ve aquí, sin necesidad de exportar.</p>
+    {% set filas_corte = d.cortes %}{% set config = d.configuracion %}{% set gid = "detalle" %}{% set completa = true %}
+    {% include "alertas/_grafica_estudiante.html" %}
+  </div>
+</section>
 {% endif %}
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
 {% endblock %}

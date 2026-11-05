@@ -23,7 +23,15 @@
   {% for s in semestres %}
     <section class="semestre-impresion">
       <h2>{{ s.periodo.identificador }} · semestre {{ s.semestre_cursado }} <span>{{ s.aprobadas }} aprobada(s), {{ s.perdidas }} perdida(s)</span></h2>
-      {% include "alertas/_tabla_historico.html" %}
+      {% set mostrar_reiterada = true %}{% include "alertas/_tabla_historico.html" %}
+      {% for f in s.filas if f.cortes_alerta | selectattr("alerta") | list %}
+        <div class="grafica-asignatura">
+          <h3>{{ f.inscripcion.curso.asignatura.codigo }} {{ f.inscripcion.curso.codigo }} · {{ f.inscripcion.curso.asignatura.nombre }}</h3>
+          {% set reiterada = f.reiterada %}{% include "alertas/_perdida_reiterada.html" %}
+          {% set filas_corte = f.cortes_alerta %}{% set config = f.configuracion_alerta %}{% set gid = "h" ~ s.periodo.id ~ "-" ~ f.inscripcion.id %}{% set completa = false %}
+          {% include "alertas/_grafica_estudiante.html" %}
+        </div>
+      {% endfor %}
     </section>
   {% else %}
     <p>El estudiante no tiene semestres registrados en PLASEA.</p>
@@ -32,5 +40,6 @@
     Generado el {{ generado_en | fecha_hora }} por {{ generado_por }}. Prototipo académico con datos ficticios.
   </footer>
 </main>
+<script src="{{ url_for('static', filename='js/graficos.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/analitica.js') }}" defer></script>
 {% endblock %}

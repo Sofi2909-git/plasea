@@ -32,14 +32,14 @@ MENSAJE_ENLACE_INVALIDO = (
 
 def calcular_hash_token(token: str) -> str:
     """Devuelve el SHA-256 en hexadecimal de un token."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _crear_token(usuario: Usuario, proposito: str) -> str:
     """Invalida los enlaces pendientes y crea uno nuevo; devuelve el token en claro."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06 / RF-08
     momento = ahora()
     invalidar_enlaces(usuario.id, proposito, momento)
@@ -69,7 +69,7 @@ def invalidar_enlaces(
     momento: Optional[dt.datetime] = None,
 ) -> None:
     """Invalida los enlaces vigentes de un usuario (de un propósito o de todos)."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06 / RF-08
     condiciones = [
         TokenCuenta.usuario_id == usuario_id,
@@ -88,7 +88,7 @@ def invalidar_enlaces(
 
 def _url_enlace(endpoint: str, token: str) -> str:
     """Arma la URL absoluta del enlace con la URL base configurada."""
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06 / RF-08
     base = current_app.config["URL_BASE_ENLACES"].rstrip("/")
     return base + url_for(endpoint, token=token)
@@ -99,7 +99,7 @@ def enviar_enlace_activacion(usuario: Usuario) -> None:
 
     El llamador confirma la transacción.
     """
-    # Responsable: Wilson D'Alessandro Saavedra Rolón
+    # Responsable: Sofi Celmar Galvis
     # RF-08
     token = _crear_token(usuario, PROPOSITO_ACTIVACION)
     minutos = current_app.config["VIGENCIA_ENLACE_ACTIVACION_MINUTOS"]
@@ -118,7 +118,7 @@ def solicitar_restablecimiento(correo: str) -> None:
     La respuesta al usuario es la misma exista o no el correo (RF-06), por eso
     esta función no informa el resultado.
     """
-    # Responsable: Islender Arturo Alfonso
+    # Responsable: Sofi Celmar Galvis
     # RF-06
     correo_normalizado = correo.strip().lower()
     usuario = db.session.scalar(
@@ -220,7 +220,7 @@ def activar_cuenta(token: str, contrasena: str, confirmacion: str) -> None:
         ErrorNegocio: enlace inválido, cuenta que ya no está pendiente o
             contraseña que no cumple la política.
     """
-    # Responsable: Yeferson Fabián Jaimes
+    # Responsable: Sofi Celmar Galvis
     # RF-09
     contrasenas.validar_politica(contrasena, confirmacion)
     try:

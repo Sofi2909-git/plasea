@@ -6,19 +6,25 @@ HTML y CSS (sin librerías externas ni CDN), cada uno con su tabla de datos:
 - RF-54: estudiantes en verde, amarillo y rojo por corte y período.
 - RF-55: inscritos por semestre y cuántos continúan en el siguiente.
 - RF-56: no continuidad por semestre de la carrera (1 a 10) de un período.
+
+Y una pantalla del Profesor por cada uno de sus cursos:
+
+- RF-66: notas registradas frente a inscritos por corte y estado de alerta de
+  cada estudiante con su motivo.
 """
 
 from __future__ import annotations
 
 from typing import Any, Optional
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, flash, render_template, request
 
-from plasea.autorizacion import rol_requerido
+from plasea.autorizacion import curso_propio_o_error, rol_requerido
 from plasea.modelos import PeriodoAcademico, db
 from plasea.rutas.alertas_analitica import seleccion_corte
-from plasea.servicios import continuidad, graficos, periodos
-from plasea.servicios.cuentas import ROL_AUDITOR
+from plasea.servicios import continuidad, estadistica_profesor, graficos, periodos
+from plasea.servicios.comunes import ErrorNegocio
+from plasea.servicios.cuentas import ROL_AUDITOR, ROL_PROFESOR
 
 blueprint = Blueprint("graficos_tablero", __name__)
 
@@ -71,4 +77,36 @@ def tablero() -> Any:
         por_semestre=por_semestre,
         maximo_indice=graficos.maximo([g.indice for g in por_semestre]),
         total_nc=total_nc,
+    )
+
+
+# ---------------------------------------------------------------------------
+# RF-66: estadística de reporte del Profesor
+# ---------------------------------------------------------------------------
+
+
+@blueprint.get("/cursos/<int:curso_id>")
+@rol_requerido(ROL_PROFESOR)
+def reporte_curso(curso_id: int) -> Any:
+    """Notas registradas y estado de cada estudiante de un curso propio (RF-66).
+
+    Abrir por URL el curso de otro docente responde HTTP 403 (RF-02).
+    """
+    # Responsable: Sofi Celmar Galvis
+    # RF-66
+    curso = curso_propio_o_error(curso_id)
+    corte = estadistica_profesor.corte_elegido(
+        curso, request.args.get("corte", type=int)
+    )
+    try:
+        datos = estadistica_profesor.reporte_curso(curso, corte)
+    except ErrorNegocio as fallo:
+        flash(fallo.mensaje, "error")
+        datos = estadistica_profesor.reporte_curso(curso, None)
+    return render_template(
+        "graficos/reporte_curso.html",
+        curso=curso,
+        datos=datos,
+        corte=datos.corte,
+        estados=estadistica_profesor.ORDEN_ESTADO,
     )

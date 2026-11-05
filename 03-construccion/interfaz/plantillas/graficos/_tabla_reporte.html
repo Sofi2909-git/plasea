@@ -1,0 +1,40 @@
+{# Estudiantes del corte con su nota, acumulada, requerida, inasistencia, estado y motivo (RF-66 y RF-67).
+   Requiere: datos (ReporteCurso). Con detalle_ritmo se agregan las horas ausentes y el ritmo (solo en pantalla). #}
+<table class="table tabla-plasea tabla-reporte{% if detalle_ritmo %} tabla-seguimiento{% endif %}">
+  <caption class="visually-hidden">Nota del corte, acumulada, requerida, inasistencia, estado y motivo de cada estudiante</caption>
+  <thead>
+    <tr>
+      <th scope="col">Estado</th>
+      <th scope="col">Código</th>
+      <th scope="col">Estudiante</th>
+      <th scope="col" class="text-end">Nota del corte</th>
+      <th scope="col" class="text-end">Acumulada</th>
+      <th scope="col" class="text-end">Requerida</th>
+      {% if detalle_ritmo %}<th scope="col" class="text-end">Horas ausentes</th>{% endif %}
+      <th scope="col" class="text-end">Inasistencia</th>
+      {% if detalle_ritmo %}<th scope="col" class="text-end">Ritmo</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in datos.filas %}
+      <tr>
+        <td>
+          <span class="semaforo semaforo-{{ f.estado | replace('_', '-') }}">{{ f.nombre_estado }}</span>
+          {% if f.nombre_motivo %}<span class="motivo-alerta">{{ f.nombre_motivo }}</span>{% endif %}
+        </td>
+        <td class="cifra-tabular">{{ f.codigo }}</td>
+        <td class="fw-semibold">{{ f.nombres }}</td>
+        <td class="text-end cifra-tabular">{% if f.nota_corte is not none %}{{ f.nota_corte | decimal }}{% else %}<span class="texto-secundario">Sin nota</span>{% endif %}</td>
+        <td class="text-end cifra-tabular fw-semibold">{{ f.nota_acumulada | decimal(2) if f.nota_acumulada is not none else "" }}</td>
+        <td class="text-end cifra-tabular">
+          {% if f.nota_requerida is none %}<span class="texto-secundario">—</span>
+          {% elif f.nota_requerida > 5 %}<span class="texto-critico">{{ f.nota_requerida | decimal(2) }} · supera 5,0</span>
+          {% else %}{{ f.nota_requerida | decimal(2) }}{% endif %}
+        </td>
+        {% if detalle_ritmo %}<td class="text-end cifra-tabular">{{ f.horas_ausentes }} h</td>{% endif %}
+        <td class="text-end cifra-tabular {{ 'valor-critico' if f.motivo_inasistencia and f.estado == 'roja' }}">{{ ((f.porcentaje_inasistencia | decimal(1)) ~ " %") if f.porcentaje_inasistencia is not none else "" }}</td>
+        {% if detalle_ritmo %}<td class="text-end cifra-tabular">{{ ((f.porcentaje_ritmo | decimal(1)) ~ " %") if f.porcentaje_ritmo is not none else "—" }}</td>{% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
